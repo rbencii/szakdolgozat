@@ -21,7 +21,7 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
     const { operator, left_field, right_field, left_player, right_player, right_value, left_value, actions, or_bool, exclusive } = rule?.rules;
     let left: any, right: any;
     let initnumber;
-    
+
     //get table
     const { data: tabledata } = await service
                 .from('tables')
@@ -130,7 +130,7 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
     let doAction = false; 
     if (left !== undefined && right !== undefined) {
         let prevplayable = playable;
-        if(rule?.rules?.name !== prevname)
+        if(rule?.rules?.name !== prevname || actions?.action_type === 1){
         switch (operator) {
             case '>=':
                 if (or_bool)
@@ -176,8 +176,6 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
 
         }
         
-       
-
         if (actions !== null && actions.action_type === -1) {
             fail=(prevplayable===true&&playable===false);
             playable = prevplayable;
@@ -219,7 +217,6 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                     console.log(exclusive,left,right);
                     break;
             }
-        
 
         if (actions !== null && actions.action_type === -1 && fail)
             doAction = true;
@@ -227,7 +224,7 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
         if (actions !== null && actions.action_type === -1 && !fail)
             doAction = false;
 
-        if(actions !== null && prevname===rule?.rules?.name && playable){
+        if(actions !== null && prevname===rule?.rules?.name && playable && (actions.action_type==null) ){
             doAction=true;
             playable=prevplayable;
         }
@@ -236,20 +233,24 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
             fail=true;
 
         
-        if(actions !== null && actions.action_type===null && rule?.rules?.required===false)
-            playable=doAction;
+            if(actions !== null && actions.action_type===null && rule?.rules?.required===false)
+                playable=doAction;
 
-        if (actions !== null && actions.action_type === 1)
-            doAction = playable;
+            if(actions !== null && actions.action_type===-2 && prevname===rule?.rules?.name)
+                doAction=playable && doAction;
 
-        if (actions !== null && actions.action_type === 2){
-            doAction = playable;
-            fail = doAction;
-        }
+            
+            if(actions !== null && actions.action_type===1)
+                doAction=playable;
+
+            if(actions !== null && actions.action_type===2){
+                doAction=playable;
+                fail=playable;
+            }
+
+            
         
-            if (rule?.rules?.name.includes('top'))
-            console.log(rule?.rules?.name,': ',left, operator, right)
-            console.log('doaction', doAction);
+            
         if (doAction) {
             const { action, left_field, right_field, number, action_type, operator, left_player, right_player, left_value, right_value } = actions;
             let left, right;
@@ -418,7 +419,7 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
         }
     }
     prevname = rule?.rules?.name;
-    
+
     return { sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
 }
@@ -586,8 +587,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return a?.id - b?.id;
     });
 
-    //console.log(chains)
-
     rules.sort((a: any, b: any) => {
         return a?.rules?.id - b?.rules?.id;
     });
@@ -612,43 +611,26 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     let fail=false;
     let prevname:string|null=null;
 
-    let globalfail=false;
-    let prevfail=false;
-    let broken = false;
-    let outercnt=0;
+    let broken=false;
+
     for (let chain of chains) {
         let ids = rangeArr(chain.chain_start, chain.chain_end);
         let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chain.chain_start)?.rules?.or_bool ?? true);
         let chaingroup = rules.filter((rule: any) => ids.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
-        if(chain.or_bool && playable && !broken){
-            console.log("break")
-            //break;
-            broken=true;
-            globalfail=fail;
-            console.log("fail:",globalfail)
+        let props = { sorter, prevname, fail,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        if(chain.or_bool && playable){
+            //console.log("break")
+            break;
         }
-        else if(chain.or_bool && !playable && !broken){
-            console.log("reset fail");
-            fail=prevfail;
-        }
-        prevfail=fail;
-        console.log('prevfail',prevfail);
-        if(outercnt++!=0){
-        console.log('(('+playable+'))');
-        console.log(chain.or_bool?'[OR]':'[AND]')
-        }
-        let cnt=0;
-
-        let props = { sorter, prevname, fail ,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-
+        //console.log(chain.or_bool?'OR':'AND')
         for (let rule of chaingroup) {
-            if(cnt++!=0){
-            console.log('('+localplayable+')');
-            console.log(rule?.rules?.or_bool?'OR':'AND')
-            }
+
+            //console.log(rule?.rules?.or_bool?'OR':'AND')
             let result = await evaluateRule({ ...props, rule });
-            console.log(rule?.rules?.name, result.fail?'fail':'');
+            //console.log(rule?.rules?.name);
+            console.log(result)
             localplayable = result.playable;
+
 
             dir = result.dir;
             current = result.current;
@@ -656,21 +638,18 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             fail = fail || result.fail;
             prevname = result.prevname;
             sorter = result.sorter;
-            props = { sorter, prevname, fail ,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-            
+            props = { sorter, prevname, fail,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+            //console.log('('+localplayable+')');
         }
+
         if (chain.or_bool)
             playable = playable || localplayable;
         else
             playable = playable && localplayable;
+            //console.log('('+playable+')');
 
 
     }
-
-    fail = globalfail || (playable && fail);
-    playable = broken || playable;
-    console.log('fail', fail);
-    console.log('playable', playable);
 
     if (!playable) {
         res.status(400).json({ error: "Card not playable" })

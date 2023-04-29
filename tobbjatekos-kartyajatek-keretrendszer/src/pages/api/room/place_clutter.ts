@@ -14,38 +14,21 @@ function rangeArr(min: number, max: number) {
     return arr;
 }
 
-async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top }: { sorter:number, prevname: string|null, fail: boolean, cardidx: number, playable: boolean, rule: any, strength: any, card: any, init: any, playerfields: any, hand: any, service: any, spids: any, session_players_id: any, dir: any, table: any, gamefields: any, handidx: any, session_id: any, current: any, next: any, top: any }) {
+async function evaluateRule({ prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top }: { prevname: string|null, fail: boolean, cardidx: number, playable: boolean, rule: any, strength: any, card: any, init: any, playerfields: any, hand: any, service: any, spids: any, session_players_id: any, dir: any, table: any, gamefields: any, handidx: any, session_id: any, current: any, next: any, top: any }) {
 
-
-
+    //let { playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, next, current, top } = props;
+    //return { playable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
     const { operator, left_field, right_field, left_player, right_player, right_value, left_value, actions, or_bool, exclusive } = rule?.rules;
-    let left: any, right: any;
+    let left, right;
     let initnumber;
-    
+    //console.log('exclusive', exclusive);
     //get table
-    const { data: tabledata } = await service
-                .from('tables')
-                .select(`
-        table
-        `).eq('session_id', session_id).single();
-            const { table: table3 } = tabledata as any;
 
-            for(let field of gamefields){
-                table3?.[field]?.sort((a: CardData, b: CardData) => a.sorter - b.sorter);
-            }
-            
-
-            let tableAbove = (exclusive !== null && exclusive === 0) ? table : table3;
-            
     //exclusive cases
 
     //left is card value
-    if (left_field === null && left_value === -1 && left_player === 0)
+    if (left_field === null)
         left = strength.indexOf(card?.value);
-
-    //left is card suit
-    if (left_field === null && left_value === null && left_player === 0)
-        left = card?.suit;
 
     //right is from init
     if (right_field === null && right_player === null && right_value === null) {
@@ -93,41 +76,26 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
 
         const { hand: righthand } = data5 as any;
 
-        righthand?.[playerfields?.[right_field]]?.sort((a: CardData, b: CardData) => a.sorter - b.sorter);
-
         right = strength.indexOf(righthand?.[playerfields?.[right_field]]?.[right_value]?.value);
     }
 
     //right is gamefield count
     if (right_field !== null && right_player === null && right_value === null)
-        right = tableAbove?.[gamefields?.[right_field]]?.length;
+        right = table?.[gamefields?.[right_field]]?.length;
 
     //right is gamefield card value from top
     if (right_field !== null && right_player === null && right_value !== null)
-        right = strength.indexOf(tableAbove?.[gamefields?.[right_field]]?.slice(-1 * right_value)?.[0]?.value);
+        right = strength.indexOf(table?.[gamefields?.[right_field]]?.slice(-1 * right_value)?.[0]?.value);
 
-    //right is placed card value
-    if((right_field === -1 && right_player === 0 && right_value === -1))
-        right = strength.indexOf(card?.value);
-
-    //right is placed card suit
-    if((right_field === -1 && right_player === 0 && right_value === null))
-        right = card?.suit;
 
     //left is card origin and right is playerfield
-    if (left_player === null && right_field !== null && right_player === null && right_value === null) {
+    if (left_player === null) {
         left = handidx;
         right = playerfields?.[right_field];
     }
 
-    //left is card origin as playerfield
-    if (left_player === null && operator == 'count') {
-        left = hand[handidx].map((x: CardData)=>left_value===null?x.suit:strength.indexOf(x.value));
-    }
+    let doAction = false;
 
-    
-
-    let doAction = false; 
     if (left !== undefined && right !== undefined) {
         let prevplayable = playable;
         if(rule?.rules?.name !== prevname)
@@ -137,6 +105,9 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                     playable = playable || (left >= right);
                 else
                     playable = playable && (left >= right);
+
+                 if(rule.rules.name==='>=topfail')
+                 console.log(left,'>=',right,playable,prevplayable);
                 break;
             case '<=':
                 if (or_bool)
@@ -168,20 +139,13 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                 else
                     playable = playable && (left < right);
                 break;
-            case 'count':
-                if (or_bool)
-                    playable = playable || (left.filter((x:any)=>x==right).length).length==left_field;
-                else
-                    playable = playable && (left.filter((x:any)=>x==right).length).length==left_field;
 
         }
         
-       
-
-        if (actions !== null && actions.action_type === -1) {
+        if (actions !== null && actions.action_type !== null) {
             fail=(prevplayable===true&&playable===false);
             playable = prevplayable;
-
+            // console.log('FAILOL FAILOL FAILOL!!!! ITTTT',fail);
         }
 
         if (actions !== null && rule?.rules?.name !== prevname)
@@ -204,22 +168,8 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                 case '<':
                     doAction = (left < right);
                     break;
-                case 'count':
-                    switch(exclusive){
-                        case 2:
-                    doAction = (left.filter((x:any)=>x==right).length)>=left_field;
-                        break;
-                        case 3:
-                    doAction = (left.filter((x:any)=>x==right).length)==left_field;
-                        break;
-                        case 4:
-                    doAction = (left.filter((x:any)=>x==right).length)<=left_field;
-                        break;
-                    }
-                    console.log(exclusive,left,right);
-                    break;
+
             }
-        
 
         if (actions !== null && actions.action_type === -1 && fail)
             doAction = true;
@@ -227,50 +177,24 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
         if (actions !== null && actions.action_type === -1 && !fail)
             doAction = false;
 
-        if(actions !== null && prevname===rule?.rules?.name && playable){
+        if(actions !== null && prevname===rule?.rules?.name)
             doAction=true;
-            playable=prevplayable;
-        }
 
-        if (actions !== null && actions.action_type === 0)
-            fail=true;
+        // console.log('NEVEK',prevname,rule?.rules?.name)
 
-        
-        if(actions !== null && actions.action_type===null && rule?.rules?.required===false)
-            playable=doAction;
-
-        if (actions !== null && actions.action_type === 1)
-            doAction = playable;
-
-        if (actions !== null && actions.action_type === 2){
-            doAction = playable;
-            fail = doAction;
-        }
-        
-            if (rule?.rules?.name.includes('top'))
-            console.log(rule?.rules?.name,': ',left, operator, right)
-            console.log('doaction', doAction);
         if (doAction) {
             const { action, left_field, right_field, number, action_type, operator, left_player, right_player, left_value, right_value } = actions;
             let left, right;
 
             //get Table
-        //     const { data: tabledata } = await service
-        //         .from('tables')
-        //         .select(`
-        // table
-        // `).eq('session_id', session_id).single();
-        //     const { table: table3 } = tabledata as any;
+            const { data: tabledata } = await service
+                .from('tables')
+                .select(`
+        table
+        `).eq('session_id', session_id).single();
+            const { table: table3 } = tabledata as any;
+            let table2 = (exclusive !== null && exclusive === 0) ? table : table3;
 
-        //     if(!(number !== null && number === 0)){
-        //         for(let field of gamefields){
-        //             table3?.[field]?.sort((a: CardData, b: CardData) => a.sorter - b.sorter);
-        //         }
-        //     }
-
-        //     let table2 = (number !== null && number === 0) ? table : table3;
-            let table2 = (number !== null && number === 0) ? table : table3;
-        
             //new rule or round attr
 
             //nonexclusive cases
@@ -298,15 +222,10 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                 const { data: data5 } = await service
                     .from('hands')
                     .select(`
-                    hand
-                    `).eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]).single();
+        hand
+        `).eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]).single();
 
                 const { hand: righthand } = data5 as any;
-
-                    for(let field of playerfields){
-                        righthand?.[field]?.sort((a: CardData, b: CardData) => a.sorter - b.sorter);
-                    }
-
                 righthandRef = righthand;
                 right = righthand?.[playerfields?.[right_field]];
                 }
@@ -319,51 +238,34 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
             let update = false;
             switch (action) {
                 case 'fill':
-                    const start = Math.max(left.length-1,0);
-                    left?.splice(start, 0, ...right.splice(-1 * Math.max(initnumber - left.length, 0), Math.max(initnumber - left.length, 0)));
-                    for(let i=start;i<left.length;i++){
-                        left[i].sorter=sorter++;
-                    }
+                    left?.splice(0, 0, ...right.splice(-1 * Math.max(initnumber - left.length, 0), Math.max(initnumber - left.length, 0)));
                     update = true;
                     break;
                 case 'move':
                     if (left_field === null) {
-                        const start = Math.max(right.length-1,0);
                         right.push(hand[handidx]?.splice(cardidx, 1)[0])
-                        for(let i=start;i<right.length;i++){
-                            right[i].sorter=sorter++;
-                        }
-                        if(right)
                         update = true;
                         break;
                     }
-
                     const lv = left_value === -1 ? left.length : left_value;
-                    const start2 = Math.max(right.length-1,0);
-                    //console.log(start2);
+                    //console.log(left_field, right_field)
+                    //console.log('lv', lv)
+                    //console.log('bal', left, 'jobb', right)
                     right.push(...left.splice(-1 * lv, lv))
-                    //console.log(right.length-1);
-                    for(let i=start2;i<right.length;i++){
-                        right[i].sorter=sorter++;
-                    }
-
+                    //console.log('ujbal', left, 'ujjobb', right)
                     update = true;
-
-
+                    //right.push({suit: 'Clubs', value: 'A'});
+                    //console.log(rule?.rules?.name,hand['+hand'],'move utan')
 
                     break;
                 case 'next':
                     next = spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
                     break;
-                case 'setcard':
-                    left[left_value]={suit:right.slice(right_value)[0]?.suit, value:right.slice(right_value)[0]?.value, sorter:sorter++};
-                    update = true;
-                    break;
             }
 
             if (update) {
-
-                if (number === null || number !== 0) {
+                //console.log('update');
+                if (exclusive === null || exclusive !== 0) {
                     await service
                         .from('tables')
                         .update({ table: table2 })
@@ -372,27 +274,25 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                     top.tablecount = table2?.table?.length;
                 }
 
-                // if(left_player===0 || right_player===0)
-                // await service
-                //     .from('hands')
-                //     .update({ hand: hand })
-                //     .eq('session_players_id', session_players_id);
+                if(left_player===0 || right_player===0)
+                await service
+                    .from('hands')
+                    .update({ hand: hand })
+                    .eq('session_players_id', session_players_id);
 
 
                 //right is playerfield
                 if (right_field !== null && right_player !== null && right_player !== 0) {
 
-                    const { data: newdata } = await service
+                    await service
                         .from('hands')
                         .update({ hand: righthandRef })
-                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]);//.select().single();
-
-                    //const { hand: newhand } = newdata as any;
+                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]);
 
                     let topview = { ...righthandRef };
                     let outerview = { ...righthandRef };
                     for (let field of playerfields) {
-                        const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
+                        const hidden: CardData = { suit: 'hidden', value: 'hidden' };
                         topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
                         outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
 
@@ -405,7 +305,7 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
                         .update({ hand: outerview })
                         .eq('id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]);
 
-
+                        //console.log(rule?.rules?.name,hand,'update utan')
 
                 }
 
@@ -418,8 +318,8 @@ async function evaluateRule({ sorter, prevname, fail, cardidx, playable, rule, s
         }
     }
     prevname = rule?.rules?.name;
-    
-    return { sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+    // console.log('ujprevname',prevname)
+    return { prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
 }
 
@@ -447,7 +347,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return;
     }
 
-
+    //console.log(handidx, cardidx)
 
     if (handidx === undefined || cardidx === undefined) {
         res.status(400).json({ error: "Missing parameters" })
@@ -525,11 +425,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     current,
     next,
     dir,
-    sorter,
     top
     `).eq('session_id', session_id).single();
 
-    let { current, next, dir, top, sorter } = data2 as any;
+    let { current, next, dir, top } = data2 as any;
 
     if (current === undefined || session_players_id === undefined || current != session_players_id) {
         res.status(400).json({ error: "Not your turn" })
@@ -547,19 +446,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const { hand } = data3 as any;
 
-    const gamefields = (data as any)?.session?.games?.gamefields as any;
-    const playerfields = (data as any)?.session?.games?.playerfields as any;
-    const init = (data as any)?.session?.games?.init as any;
-
-
-    for(let field of playerfields){
-    hand?.[field]?.sort((a: CardData, b: CardData) => {
-        return a.sorter - b.sorter;
-    });
-    }
-
-    
-
     const card = hand?.[handidx]?.[cardidx];
 
     if (card === undefined) {
@@ -568,31 +454,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     //check if card is playable
+
     const table = top;
-
-    for(let field of gamefields){
-    table?.[field]?.sort((a: CardData, b: CardData) => {
-        return a.sorter - b.sorter;
-    });
-    }
-
 
 
 
     const rules = (data as any)?.session?.games?.games_rules as any ?? [];
+    const gamefields = (data as any)?.session?.games?.gamefields as any;
+    const playerfields = (data as any)?.session?.games?.playerfields as any;
+    const init = (data as any)?.session?.games?.init as any;
     const chains = (data as any)?.session?.games?.chains as any ?? [];
-
-    chains.sort((a: any, b: any) => {
-        return a?.id - b?.id;
-    });
-
-    //console.log(chains)
-
-    rules.sort((a: any, b: any) => {
-        return a?.rules?.id - b?.rules?.id;
-    });
-
-
 
     const strength = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
     const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
@@ -605,72 +476,53 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     let spids = data5?.map((sp: any) => sp.id) as any;
 
-    spids.sort();
-
-
+    // let playable = !(rules.filter((rule: any) => rule?.rules?.required)?.[0]?.rules?.or_bool);
     let playable = !(chains[0]?.or_bool ?? true)
     let fail=false;
     let prevname:string|null=null;
+    //let localplayable = false;
 
-    let globalfail=false;
-    let prevfail=false;
-    let broken = false;
-    let outercnt=0;
+    //console.log('before chain',hand)
     for (let chain of chains) {
         let ids = rangeArr(chain.chain_start, chain.chain_end);
         let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chain.chain_start)?.rules?.or_bool ?? true);
         let chaingroup = rules.filter((rule: any) => ids.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
-        if(chain.or_bool && playable && !broken){
-            console.log("break")
-            //break;
-            broken=true;
-            globalfail=fail;
-            console.log("fail:",globalfail)
-        }
-        else if(chain.or_bool && !playable && !broken){
-            console.log("reset fail");
-            fail=prevfail;
-        }
-        prevfail=fail;
-        console.log('prevfail',prevfail);
-        if(outercnt++!=0){
-        console.log('(('+playable+'))');
-        console.log(chain.or_bool?'[OR]':'[AND]')
-        }
-        let cnt=0;
-
-        let props = { sorter, prevname, fail ,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-
+        let props = {  prevname, fail,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        // console.log('--------------')
+        // console.log(chain.or_bool ? 'CHAIN VAGY' : 'CHAIN ES');
+        // console.log('(')
+       // console.log('hossz',chaingroup.length)
         for (let rule of chaingroup) {
-            if(cnt++!=0){
-            console.log('('+localplayable+')');
-            console.log(rule?.rules?.or_bool?'OR':'AND')
-            }
+            //console.log(rule?.rules?.name)
+            // let result = await evaluateRule({ ...props, rule});
+            // console.log('elotte local',localplayable)
+            // console.log('ELOTTE PREVNAME',prevname)
             let result = await evaluateRule({ ...props, rule });
-            console.log(rule?.rules?.name, result.fail?'fail':'');
-            localplayable = result.playable;
+            // console.log('UTANA PREVNAME',result.prevname)
 
+            localplayable = result.playable;
+            // console.log('utana local',localplayable)
             dir = result.dir;
             current = result.current;
             next = result.next;
             fail = fail || result.fail;
             prevname = result.prevname;
-            sorter = result.sorter;
-            props = { sorter, prevname, fail ,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-            
+            props = {  prevname, fail,cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+            // console.log('FAILOL',fail)
+            // console.log(rule.rules.or_bool ? 'VAGY' : 'ES', rule.rules.name)
         }
+        // console.log(')')
         if (chain.or_bool)
             playable = playable || localplayable;
         else
             playable = playable && localplayable;
-
+        // console.log('CHAIN playable', playable);
+        // console.log('--------------')
 
     }
 
-    fail = globalfail || (playable && fail);
-    playable = broken || playable;
-    console.log('fail', fail);
-    console.log('playable', playable);
+    // res.status(200).json({ playable: playable })
+    // return;
 
     if (!playable) {
         res.status(400).json({ error: "Card not playable" })
@@ -680,53 +532,268 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
 
     //remove card from hand, add to table
-
-
+    //console.log('after playable',hand)
+    //console.log(!fail);
     if(!fail){
     hand[handidx].splice(cardidx, 1);
-    top.table.push({...card, sorter});
-    }
 
+    await service
+        .from('hands')
+        .update({ hand: hand })
+        .eq('session_players_id', session_players_id);
+
+
+    top.table.push(card);
+    }
     
     //do card actions for nonrequired rules
-    
-    let playable2 = false;
+
     for(let rule of rules.filter((rule: any) => !rule?.rules?.required)){
         
-        let props = { sorter, prevname, fail,cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        let props = {  prevname, fail,cardidx, playable: true, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
         let result = await evaluateRule({ ...props, rule });
             dir = result.dir;
             current = result.current;
             next = result.next;
             fail = fail || result.fail;
             prevname = result.prevname;
-            sorter = result.sorter;
-            playable2 = result.playable;
-            props = { sorter, prevname, fail,cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+            props = {  prevname, fail,cardidx, playable: true, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
          
     }
 
-    //update hand
+    // for (let rule of rules.filter((rule: any) => !rule?.rules?.required)) {
+
+    //     const { operator, left_field, right_field, left_player, right_player, right_value, left_value, actions } = rule?.rules;
+    //     let left, right;
+    //     let initnumber;
+    //     //exclusive cases
+
+    //     //left is card value
+    //     if (left_field === null)
+    //         left = strength.indexOf(card?.value);
+
+    //     //right is from init
+    //     if (right_field === null && right_player === null && right_value === null) {
+    //         right = init['playerfields'][playerfields?.[left_field]];
+    //         initnumber = right;
+    //     }
+
+    //     //right is value
+    //     if (right_field === null && right_player === null && right_value !== null)
+    //         right = right_value;
+
+    //     //nonexclusive cases
+
+    //     //left is playerfield count
+    //     if (left_field !== null && left_value === null)
+    //         left = hand?.[playerfields?.[left_field]]?.length;
+
+    //     //left is playerfield card value
+    //     if (left_field !== null && left_value !== null)
+    //         left = strength.indexOf(hand?.[playerfields?.[left_field]]?.[left_value]?.value);
+
+    //     //right is playerfield count
+    //     if (right_field !== null && right_value === null && right_player !== null) {
+
+    //         const { data: data4 } = await service
+    //             .from('hands')
+    //             .select(`
+    //         hand
+    //         `).eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]).single();
+
+    //         const { hand: righthand } = data4 as any;
+
+    //         right = righthand?.[playerfields?.[right_field]]?.length;
+
+    //     }
+
+    //     //right is playerfield card value
+    //     if (right_field !== null && right_value !== null && right_player !== null) {
+
+    //         const { data: data5 } = await service
+    //             .from('hands')
+    //             .select(`
+    //         hand
+    //         `).eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]).single();
+
+    //         const { hand: righthand } = data5 as any;
+
+    //         right = strength.indexOf(righthand?.[playerfields?.[right_field]]?.[right_value]?.value);
+    //     }
+
+    //     //right is gamefield count
+    //     if (right_field !== null && right_player === null && right_value === null)
+    //         right = table?.[gamefields?.[right_field]]?.length;
+
+    //     //right is gamefield card value from top
+    //     if (right_field !== null && right_player === null && right_value !== null)
+    //         right = strength.indexOf(table?.[gamefields?.[right_field]]?.slice(-1 * right_value)?.[0]?.value);
+
+
+    //     //left is card origin and right is playerfield
+    //     if (left_player === null) {
+    //         left = handidx;
+    //         right = playerfields?.[right_field];
+    //     }
+
+    //     let doAction = false;
+
+    //     if (left !== undefined && right !== undefined)
+    //         switch (operator) {
+    //             case '>=':
+    //                 doAction = (left >= right);
+    //                 break;
+    //             case '<=':
+    //                 doAction = (left <= right);
+    //                 break;
+    //             case '==':
+    //                 doAction = (left === right);
+    //                 break;
+    //             case '!=':
+    //                 doAction = (left !== right);
+    //                 break;
+    //             case '>':
+    //                 doAction = (left > right);
+    //                 break;
+    //             case '<':
+    //                 doAction = (left < right);
+    //                 break;
+
+    //         }
+    //     console.log(left, doAction, rule?.rules?.actions?.action)
+    //     if (doAction) {
+    //         const { action, left_field, right_field, number, action_type, operator, left_player, right_player, left_value, right_value } = actions;
+    //         let left, right;
+
+    //         //get Table
+    //         const { data: tabledata } = await service
+    //             .from('tables')
+    //             .select(`
+    //         table
+    //         `).eq('session_id', session_id).single();
+    //         const { table: table3 } = tabledata as any;
+    //         let table2 = (number !== null && number === 0) ? table : table3;
+
+    //         //new rule or round attr
+
+    //         //nonexclusive cases
+
+    //         //left is playerfield
+    //         if (left_field !== null && left_player !== null)
+    //             left = hand?.[playerfields?.[left_field]];
+
+    //         //left is gamefield
+    //         if (left_field !== null && left_player === null)
+    //             left = table2?.[gamefields?.[left_field]];
+
+    //         //right is playerfield
+    //         let righthandRef = null;
+    //         if (right_field !== null && right_player !== null) {
+
+    //             const { data: data5 } = await service
+    //                 .from('hands')
+    //                 .select(`
+    //     hand
+    //     `).eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]).single();
+
+    //             const { hand: righthand } = data5 as any;
+    //             righthandRef = righthand;
+    //             right = righthand?.[playerfields?.[right_field]];
+    //         }
+
+    //         //right is gamefield
+    //         if (right_field !== null && right_player === null)
+    //             right = table2?.[gamefields?.[right_field]];
+
+    //         let update = false;
+    //         switch (action) {
+    //             case 'fill':
+    //                 left?.splice(0, 0, ...right.splice(-1 * Math.max(initnumber - left.length, 0), Math.max(initnumber - left.length, 0)));
+    //                 update = true;
+    //                 break;
+    //             case 'move':
+    //                 const lv = left_value === -1 ? left.length : left_value;
+    //                 console.log(left_field, right_field)
+    //                 console.log('lv', lv)
+    //                 console.log('bal', left, 'jobb', right)
+    //                 right.push(...left.splice(-1 * lv, lv))
+    //                 console.log('ujbal', left, 'ujjobb', right)
+    //                 update = true;
+    //                 break;
+    //             case 'next':
+    //                 next = spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
+    //                 break;
+    //         }
+
+    //         if (update) {
+    //             console.log('update');
+    //             if (number === null || number !== 0) {
+    //                 await service
+    //                     .from('tables')
+    //                     .update({ table: table2 })
+    //                     .eq('session_id', session_id);
+
+    //                 top.tablecount = table2?.table?.length;
+    //             }
+
+    //             await service
+    //                 .from('hands')
+    //                 .update({ hand: hand })
+    //                 .eq('session_players_id', session_players_id);
+
+
+    //             //right is playerfield
+    //             if (right_field !== null && right_player !== null) {
+
+    //                 await service
+    //                     .from('hands')
+    //                     .update({ hand: righthandRef })
+    //                     .eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]);
+
+    //                 let topview = { ...righthandRef };
+    //                 let outerview = { ...righthandRef };
+    //                 for (let field of playerfields) {
+    //                     const hidden: CardData = { suit: 'hidden', value: 'hidden' };
+    //                     topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
+    //                     outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
+
+    //                 }
+    //                 await service.from('handview')
+    //                     .update({ top: topview })
+    //                     .eq('session_players_id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]);
+
+    //                 await service.from('session_players')
+    //                     .update({ hand: outerview })
+    //                     .eq('id', spids[(spids.indexOf(session_players_id) + right_player * dir) % spids.length]);
+
+
+    //             }
+
+    //         }
+
+
+
+
+
+    //     }
+
+    // }
+
     //next player's turn
 
-    const {data: newdata } =await service
-    .from('hands')
-    .update({ hand: hand })
-    .eq('session_players_id', session_players_id)//.select().single();
-    //const { hand: newhand} = newdata as any;
 
     await service.
         from('tableview')
-        .update({ current: next, next: spids[(spids.indexOf(next) + dir) % spids.length], top: { ...top, table: top.table }, sorter })
+        .update({ current: next, next: spids[(spids.indexOf(next) + dir) % spids.length], top: { ...top, table: top.table } })
         .eq('session_id', session_id);
 
     //update view
 
     // build handview, third person view of hand
-    let topview = { ...hand };//{ ...newhand };
-    let outerview = { ...hand };//{ ...newhand };
+    let topview = { ...hand };
+    let outerview = { ...hand };
     for (let field of playerfields) {
-        const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
+        const hidden: CardData = { suit: 'hidden', value: 'hidden' };
         topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
         outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
 

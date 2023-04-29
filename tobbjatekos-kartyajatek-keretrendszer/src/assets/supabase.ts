@@ -12,8 +12,9 @@ export interface Database {
       actions: {
         Row: {
           action: string
+          action_type: number | null
           id: number
-          left_field: number
+          left_field: number | null
           left_player: number | null
           left_value: number | null
           number: number | null
@@ -21,12 +22,12 @@ export interface Database {
           right_field: number | null
           right_player: number | null
           right_value: number | null
-          round_attr: string | null
         }
         Insert: {
           action: string
+          action_type?: number | null
           id?: number
-          left_field: number
+          left_field?: number | null
           left_player?: number | null
           left_value?: number | null
           number?: number | null
@@ -34,12 +35,12 @@ export interface Database {
           right_field?: number | null
           right_player?: number | null
           right_value?: number | null
-          round_attr?: string | null
         }
         Update: {
           action?: string
+          action_type?: number | null
           id?: number
-          left_field?: number
+          left_field?: number | null
           left_player?: number | null
           left_value?: number | null
           number?: number | null
@@ -47,7 +48,29 @@ export interface Database {
           right_field?: number | null
           right_player?: number | null
           right_value?: number | null
-          round_attr?: string | null
+        }
+      }
+      chains: {
+        Row: {
+          chain_end: number
+          chain_start: number
+          games_id: number
+          id: number
+          or_bool: boolean
+        }
+        Insert: {
+          chain_end: number
+          chain_start: number
+          games_id: number
+          id?: number
+          or_bool?: boolean
+        }
+        Update: {
+          chain_end?: number
+          chain_start?: number
+          games_id?: number
+          id?: number
+          or_bool?: boolean
         }
       }
       games: {
@@ -140,9 +163,10 @@ export interface Database {
         Row: {
           action_id: number | null
           created_at: string | null
+          exclusive: number | null
           id: number
           left_field: number | null
-          left_player: number
+          left_player: number | null
           left_value: number | null
           name: string
           operator: string
@@ -155,9 +179,10 @@ export interface Database {
         Insert: {
           action_id?: number | null
           created_at?: string | null
+          exclusive?: number | null
           id?: number
           left_field?: number | null
-          left_player?: number
+          left_player?: number | null
           left_value?: number | null
           name?: string
           operator?: string
@@ -170,9 +195,10 @@ export interface Database {
         Update: {
           action_id?: number | null
           created_at?: string | null
+          exclusive?: number | null
           id?: number
           left_field?: number | null
-          left_player?: number
+          left_player?: number | null
           left_value?: number | null
           name?: string
           operator?: string
@@ -256,6 +282,7 @@ export interface Database {
           id: number
           next: number
           session_id: number
+          sorter: number
           top: Json
         }
         Insert: {
@@ -264,6 +291,7 @@ export interface Database {
           id?: number
           next: number
           session_id: number
+          sorter?: number
           top: Json
         }
         Update: {
@@ -272,6 +300,7 @@ export interface Database {
           id?: number
           next?: number
           session_id?: number
+          sorter?: number
           top?: Json
         }
       }

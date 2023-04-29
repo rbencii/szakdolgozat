@@ -1,7 +1,17 @@
 import { Database } from "@/assets/supabase";
+import Chainer from "@/components/chainer";
 import Rule, { Ruletype } from "@/components/rule";
 import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 import { ChangeEvent, Fragment, useEffect, useState } from "react";
+
+function rangeArr(min: number, max: number) {
+    var len = max - min + 1;
+    var arr = new Array(len);
+    for (var i=0; i<len; i++) {
+      arr[i] = min + i;
+    }
+    return arr;
+  }
 
 export default function Editor() {
     const [games, setGames] = useState<{game:number|null, games:{id:number, name:string}[], loadedgame: any}>({game:null, games:[], loadedgame: null}); 
@@ -52,7 +62,25 @@ export default function Editor() {
     }
 
     const duplicateRule = (rule: any) => {
-    setGames((prev)=>{return {...prev, loadedgame: {...prev.loadedgame, games_rules: [...prev.loadedgame.games_rules, {rules: {...rule, id:-2}}  ]  }}})
+    setGames((prev)=>{return {...prev, loadedgame: {...prev.loadedgame, games_rules: [...prev.loadedgame.games_rules, {rules: {...rule, id:-2, actions:rule.actions!==null?{...rule.actions, id:-1}:null}}  ]  }}})
+    }
+
+    const addChain = (chain: any)=>{
+        setGames((prev)=>{return {...prev, loadedgame: {...prev.loadedgame, chains: [...prev.loadedgame?.chains??[], chain]}}})
+    }
+
+    const deleteChain = async (id: number)=>{
+        setGames((prev)=>{return {...prev, loadedgame: {...prev.loadedgame, chains: prev.loadedgame?.chains?.filter((chain: any)=>chain.id!==id)}}})
+        const options: RequestInit = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({id})
+        }
+
+        await fetch(`api/game/deletechain`, options);
+
     }
 
     const supabase = useSupabaseClient();
@@ -74,7 +102,35 @@ export default function Editor() {
                     })
                 }
             </select>
-                <div className="text-center [&_span:first-of-type>span]:hidden">
+            { games.game && games.loadedgame?.games_rules &&
+                    <Chainer refresh={()=>loadRules()} newChain={(chain)=>addChain(chain)} games_id={games.game as number} rules={games.loadedgame?.games_rules?.map((x: any)=>x?.rules)}></Chainer>
+                    }
+                     <div className="text-center [&_span:first-of-type>span]:hidden">
+                     <h1 className="text-xl">game logic chains</h1>
+                        {
+                            games.game && games.loadedgame?.chains?.map((chain: any, i: number)=>{
+
+                            let ids = rangeArr(chain.chain_start, chain.chain_end);
+                            let rules = games.loadedgame?.games_rules?.filter((rule: any)=>ids.includes(rule.rules.id)&&rule.rules.required);
+
+                            return (
+                                <div onClick={()=>deleteChain(chain.id)} key={i}>
+                                    <div>{chain.or_bool?'OR':'AND'}</div>
+                                    {rules?.map((rule: any, i: number)=>{
+                                        return (
+                                            <span key={i}>
+                                                {rule.rules.or_bool?<span> OR </span>:<span> AND </span>}
+                                                {rule.rules.name}
+                                            </span>
+                                        )
+                                    })}
+                                </div>
+                            )
+
+                            })
+                        }
+                     </div>
+                {/* <div className="text-center [&_span:first-of-type>span]:hidden">
                     <h1 className="text-xl">required</h1>
             {games.game &&
                 games.loadedgame?.games_rules?.filter((rule: {rules: Ruletype})=>rule.rules.required).map((rule: {rules: Ruletype}, i: number)=>{
@@ -84,7 +140,7 @@ export default function Editor() {
                     return <span key={i}> <span>AND</span> {rule.rules.name}</span>
                 })
             }
-            </div>
+            </div> */}
             <div className="text-center [&_span:first-of-type>span]:hidden">
                     <h1 className="text-xl">effects</h1>
             {games.game &&
@@ -96,7 +152,7 @@ export default function Editor() {
             </div>
             {games.game &&
                 games.loadedgame?.games_rules?.map((rule: {rules: Ruletype}, i: number)=>{
-                    return <Rule key={i+'b'+rule.rules.id} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
+                    return <Rule key={i} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
                 })
             }
             {games.game && <button onClick={()=>newRule()}> add new rule</button>}

@@ -49,18 +49,22 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
    
     const values = [ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", ];
     const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
-    const cards:{value:string, suit:string}[] = [];
+    const cards:{value:string, suit:string, sorter: number}[] = [];
+    
     for (let s = 0; s < suits.length; s++) {
       for (let v = 0; v < values.length; v++) {
         const value = values[v];
         const suit = suits[s];
-        cards.push({ value, suit });
+        cards.push({ value, suit, sorter: 0 });
       }
     }
 
     for(let i = 0; i < 6; i++)
     shuffle(cards);
 
+    let sorter = 0;
+    for(let card of cards)
+      card.sorter = sorter++;
 
     const { data: data3, error: error3 } = await service
     .from('session')
@@ -87,11 +91,20 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const top: any = {};
     const outer: any = {};
         for(let idx of playerfields){
+            if(init.playerfields[idx]?.length == undefined){
             hand[idx] = cards.splice(0, init.playerfields[idx]);
             top[idx] = idx[0]==='-'?Array(init.playerfields[idx]).fill({value:'hidden', suit:'hidden'}):hand[idx];
             outer[idx] = idx==='+hand'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
-            console.log(hand[idx])
+            }
+            else{
+              hand[idx] = init.playerfields[idx];
+              top[idx] = idx[0]==='-'?Array(init.playerfields[idx].length).fill({value:'hidden', suit:'hidden'}):hand[idx];
+              outer[idx] = idx==='+hand'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
+            }
+            
         }
+
+        
 
     const { error: handerror } = await service
     .from('hands')
@@ -103,6 +116,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     .from('session_players')
     .update({ hand: outer })
     .eq('id', spID);
+
+    //console.log(top)
 
     const { error: handerror2 } = await service
     .from('handview')
@@ -119,16 +134,24 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const table: any = {};
     for(let idx of gamefields){
+      if(init.gamefields[idx]?.length == undefined)
         table[idx] = cards.splice(0, init.gamefields[idx]);
+      else
+        table[idx] = init.gamefields[idx];
     }
 
     const top: any = {};
     for(let idx of gamefields){
-      if(idx!=='table')
+      if(idx!=='table' && idx[0]!='-')
       top[idx] = table[idx];
+      else
+      top[idx] = []
+      
     }
 
     top['table'] = table['table'].slice(-1);
+    sorter+=1;
+    top['table'][0].sorter = sorter;
     top['draw'] = true;
     top['tablecount'] = table['table'].length;
 
@@ -141,7 +164,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { data: data4, error: error4 } = await service
     .from('tableview')
     .insert([
-        { session_id: id, top: top, current: spIDs[0], next: spIDs[1], dir: 1 },
+        { session_id: id, top: top, current: spIDs[0], next: spIDs[1], dir: 1, sorter },
     ]).select().single();
 
     const { data:session, error: sessionerror } = await service.

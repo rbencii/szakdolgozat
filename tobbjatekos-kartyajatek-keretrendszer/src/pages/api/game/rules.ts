@@ -24,6 +24,13 @@ let { data: games, error } = await supabaseServerClient
 .select(`
     id,
     name,
+    chains(
+        id,
+        games_id,
+        chain_start,
+        chain_end,
+        or_bool
+    ),
     games_rules (
         rules(
             id,
@@ -37,6 +44,7 @@ let { data: games, error } = await supabaseServerClient
             right_field,
             required,
             or_bool,
+            exclusive,
             actions(
                 id,
                 left_field,
@@ -45,7 +53,7 @@ let { data: games, error } = await supabaseServerClient
                 number,
                 left_player,
                 right_player,
-                round_attr,
+                action_type,
                 operator,
                 left_value,
                 right_value
@@ -53,6 +61,9 @@ let { data: games, error } = await supabaseServerClient
         )
     )
 `).eq('id', id).single();
+
+if((games?.chains as any[]).length!=undefined && (games?.chains as any[]).length>0)
+(games?.chains as any[]).sort((a, b) => a?.id - b?.id);
 
   res.status(200).json({ games, error });
 }

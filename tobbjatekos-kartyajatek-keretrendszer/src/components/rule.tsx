@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface Ruletype {
     "id": number,
@@ -12,16 +12,31 @@ export interface Ruletype {
     "right_field": number | null,
     "required": boolean,
     "or_bool": boolean,
+    "exclusive": number|null,
     "actions": any
 }
 
 export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, game_id: number, duplicate: CallableFunction }) {
+    //const leftSelect = useRef<HTMLSelectElement>();
+    //const rightSelect = useRef<HTMLSelectElement>();
     const [rulesState, setRulesState] = useState<Ruletype>(rules);
-    let { id, required, operator, left_field, right_field, left_player, right_player, right_value, left_value, actions, or_bool, name } = rulesState;
+    // const [last, setLast] = useState<string>('');
+    
+    // useEffect
+    //     (() => {
+    //         if(last == 'left' && rightSelect.current)
+    //         rightSelect.current.value=getRightValue();
+    //         else if(last == 'right' && leftSelect.current)
+    //         leftSelect.current.value=getLeftValue();
+    //     }, [rulesState])
+
+
+    let { id, required, operator, left_field, right_field, left_player, right_player, right_value, left_value, actions, or_bool, name, exclusive } = rulesState;
     const lcard = left_field===null;
-    const lpfcv = (left_field !== null && left_value !== null)
-    const lpfc = (left_field !== null && left_value === null)
-    const lorigin = left_player===null;
+    const lpfcv = (left_field !== null && left_value !== null && left_player !== null)
+    const lpfc = (left_field !== null && left_value === null && left_player !== null)
+    const lorigin = right_field != null && right_value == null && right_player == null && left_player==null;
+    const loriginpf = left_player==null && operator == 'count';
 
     const rpfcv =(right_field !== null && right_value !== null && right_player !== null)
     const rgfcv =(right_field !== null && right_player === null && right_value !== null)
@@ -29,14 +44,15 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
     const rgfc=(right_field !== null && right_player === null && right_value === null)
     const rv =(right_field === null && right_player === null && right_value !== null)
     const rinit = (right_field === null && right_player === null && right_value === null)
-    const rpf = lorigin;
+    const rpf = right_field != null && right_value == null && right_player == null && left_player==null;
+    const rcard = (right_field === -1 && right_player === 0 && right_value === -1)
 
     const lapf = actions?.left_field !== null && actions?.left_player !== null;
     const rapf = actions?.right_field !== null && actions?.right_player !== null;
     const ragf = actions?.right_field !== null && actions?.right_player === null;
-
     const getLeftValue = ()=>{
         if(id===-1) return '';
+        if(loriginpf) return 'originpf';
         if(lorigin) return 'origin';
         if(lcard) return 'card';
         if(lpfcv) return 'pfcv';
@@ -48,6 +64,7 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
 
     const getRightValue = ()=>{
         if(id===-1) return '';
+        if(rcard) return 'card';
         if(rpf) return 'pf';
         if(rpfcv) return 'pfcv';
         if(rgfcv) return 'gfcv';
@@ -59,6 +76,8 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
 
         return '';
     }
+    
+
 
 
     const handleLSelect = (e: any) => {
@@ -66,7 +85,7 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
         switch(value){
             case 'card':
                 left_field = null;
-                left_value = null;
+                left_value = -1;
                 left_player = 0;
                 break;
             case 'pfcv':
@@ -85,11 +104,18 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
                 left_player = null;
                 right_field = 0;
                 break;
+            case 'originpf':
+                left_field = 0;
+                left_value = -1;
+                left_player = null;
+                operator = 'count';
+
             default:
                 break;
         
             }
-            setRulesState((prev)=>({...prev, left_field, left_value, left_player, right_field}));
+            setRulesState((prev)=>({...prev, left_field, left_value, left_player, right_field, operator}));
+            // setLast('left');
     }
 
     const handleRSelect = (e: any) => {
@@ -132,12 +158,18 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
                 right_player = null;
                 left_player=null;
                 break;
+            case 'card':
+                right_field = -1;
+                right_value = -1;
+                right_player = 0;
+                break;
             default:
                 break;
 
         }
 
         setRulesState((prev)=>({...prev, right_field, right_value, right_player, left_player, left_field}));
+        // setLast('right');
     }
 
     const handleInput=(e: any) => {
@@ -182,7 +214,20 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
         });
         const data = await res.json();
         if(data.error===null && data.rules!==null)
-        setRulesState((prev)=>({...prev, id: data.rules.id}));
+        setRulesState((prev)=>({...prev, id: data.rules.id, actions:{...prev.actions, id:data.rules.action_id}}));
+        console.log(data,'data')
+    }
+
+    const removeRule = async () => {
+
+        const res = await fetch('/api/game/removerule', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({rule_id: rulesState.id, game_id})
+        });
+
     }
 
     return (
@@ -191,7 +236,7 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
             <div>{or_bool ? 'OR' : 'AND'}
                 <input type="checkbox" name="or_bool" id="or_bool" onChange={handleCheckbox} checked={or_bool} />
             </div>
-            {/* <input className="text-center" type="text" id="id" onChange={handleInput} value={id} /> */}
+            <input className="text-center" type="text" id="id" onChange={handleInput} value={id} />
             <input className="text-center" type="text" id="name" onChange={handleInput} value={name??''} />
             <div>{required ? 'required' : 'effect'}
                 <input type="checkbox" name="required" id="required" onChange={handleCheckbox} checked={required} />
@@ -203,6 +248,7 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
                     <option value="pfcv">playerfield card value</option>
                     <option value="pfc">playerfield count</option>
                     <option value="origin">card origin</option>
+                    <option value="originpf">card origin as playerfield</option>
                 </select>
                 <select className="border" name="operator" id="operator" onChange={handleInput} value={operator}>
                     <option className="text-center" value="">operator</option>
@@ -212,6 +258,7 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
                     <option className="text-center" value=">">{'>'}</option>
                     <option className="text-center" value="<">{'<'}</option>
                     <option className="text-center" value="!=">{'!='}</option>
+                    <option className="text-center" value="count">{'count'}</option>
                 </select>
                 <select onChange={(e)=>handleRSelect(e)} className="border" name="right" id="rselect" defaultValue={getRightValue()}>
                     <option value="">right operand</option>
@@ -222,6 +269,15 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
                     <option value="v">value</option>
                     <option value="init">init</option>
                     <option value="pf">playerfield</option>
+                    <option value="card">placed card</option>
+                </select>
+                <select onChange={(e)=>handleInput(e)} className="border" name="exclusive" id="exclusive" defaultValue={exclusive??''}>
+                    <option value="">gamefield group</option>
+                    <option value={0}>tabletop</option>
+                    <option value={1}>deck</option>
+                    <option value={2}>min</option>
+                    <option value={3}>equals</option>
+                    <option value={4}>max</option>
                 </select>
             </div>
             <div className="flex items-center justify-center gap-4">
@@ -271,11 +327,18 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
             <div className="flex items-center justify-center gap-1.5">
                 {/* <div className="flex flex-col items-center justify-center">
                     <div>action_id</div>
-                    <input className="text-center border w-16" type="text" id="actions.id" onChange={handleActionInput} value={actions?.id??''} />
                 </div> */}
+                <input className="text-center border w-16" type="text" id="actions.id" onChange={handleActionInput} value={actions?.id??''} />
                 <div className="flex flex-col items-center justify-center">
                     <div>action</div>
-                    <input className="text-center border w-16" type="text" id="actions.action" onChange={handleActionInput} value={actions?.action??''} />
+                    {/* <input className="text-center border w-16" type="text" id="actions.action" onChange={handleActionInput} value={actions?.action??''} /> */}
+                    <select className="border" name="actions.action" id="actions.action" value={actions?.action??''} onChange={handleActionInput}>
+                        <option value="">action</option>
+                        <option value="fill">fill</option>
+                        <option value="move">move</option>
+                        <option value="next">next</option>
+                        <option value="setcard">setcard</option>
+                    </select>
                 </div>
                 <div className="flex flex-col items-center justify-center">
                     <div>left player</div>
@@ -317,8 +380,8 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
                     </div>
 
                     <div className="flex flex-col items-center justify-center">
-                    <div>round attr</div>
-                    <input className="text-center border w-16" type="text" id="actions.round_attr" onChange={handleActionInput} value={actions?.round_attr??''} />
+                    <div>action_type</div>
+                    <input className="text-center border w-16" type="text" id="actions.action_type" onChange={handleActionInput} value={actions?.action_type??''} />
                     </div>
 
 
@@ -329,6 +392,7 @@ export default function Rule({ rules, game_id, duplicate }: { rules: Ruletype, g
         </div>
         <button type="submit">save</button>
         <div className="cursor-pointer flex w-fit" onClick={()=>duplicate(rulesState)}>duplicate</div>
+        <div className="cursor-pointer flex w-fit" onClick={()=>removeRule()}>remove</div>
         </form>
     )
 }

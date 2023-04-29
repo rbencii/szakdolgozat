@@ -7,6 +7,8 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
     const [room, setRoom] = useState<null|{you:number, id:string,view?:{hand:any, table:{current:number, dir: number, next: number, top:{draw:boolean, tablecount:number, table: any}|any}}, players:{id:number,name:string, hand:any}[], started:boolean}>(null);
     const [sub, setSub] = useState<null|RealtimeChannel>(null);
     const [games, setGames] = useState<{id:number, name:string}[]>([]); 
+    const [debugHand, setDebugHand] = useState<any>(null);
+    const [fieldOrders, setFieldOrders] = useState<{playerfields: string[], gamefields: string[]}|null>(null);
 
     const test = async () => {
         const options : RequestInit = {
@@ -26,8 +28,9 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
         const resp = await fetch('api/room/presence');
         const obj = await resp.json();
         console.log(obj);
-        if(obj?.resp?.id)
+        if(obj?.resp?.id){
             setRoom(obj.resp);
+        }
     }
     
 
@@ -47,8 +50,9 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
 
         const res = await fetch('api/room/join', options);
         const obj = await res.json();
-        if(obj?.resp)
+        if(obj?.resp){
         setRoom(obj.resp);
+        }
     }
 
     const newRoom = async () => {
@@ -117,8 +121,41 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
     }
 
 
+    const debug = async () => {
+        const resp = await fetch('api/room/debughand');
+        const obj = await resp.json();
+        console.log(obj.resp);
+        setDebugHand(obj.resp);
+    }
+
+    const getFieldOrders = async () => {
+        if(room?.id==null)
+        return;
+
+        const options : RequestInit = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({id:room.id})
+        }
+
+        const resp = await fetch('api/room/getfieldorders', options);
+        const obj = await resp.json();
+        if(obj?.error)
+        return;
+        console.log(obj?.fields);
+        setFieldOrders(obj?.fields);
+    }
+
     useEffect(()=>{
         console.log('room changed', room)
+        if(fieldOrders==null)
+        getFieldOrders();
+
+        // if(room?.view?.table!=null)
+        // debug();
+
     if(room===null)
         loadRoom();
     if(room && !sub && room?.id && room?.you){
@@ -266,6 +303,7 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
     }
     else if(room && sub && room.players.length === 0){
         setRoom(null);
+        setFieldOrders(null);
         supabase.removeAllChannels();   
         setSub(null);
     }
@@ -279,7 +317,7 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
             
             {room.players.filter(player=>player.id!==room?.you).map((player)=>
                 <div key={player.id} className="border-2 border-black flex flex-col items-center" style={{borderColor: room.view?.table?.current===player.id?'lime':''}}>  
-                <Hand hand={{top: player.hand as any}}/>
+                <Hand idxs={fieldOrders?.playerfields?.filter(x=>x!='+buttons')} hand={{top: player.hand as any}}/>
                 </div>
             )
             }
@@ -287,11 +325,24 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
             </div>
             <div className="border-2 border-black flex flex-col items-center">
             
-            <Hand hand={room.view?.table as any}/>
+            <Hand idxs={fieldOrders?.gamefields} hand={room.view?.table as any}/>
             </div>
             <div className="border-2 border-black flex flex-col items-center" style={{borderColor: room.view?.table?.current===room.you?'lime':''}}>
-            <Hand hand={room.view?.hand}/>
+            <Hand idxs={fieldOrders?.playerfields?.filter(x=>x!='+buttons')} hand={room.view?.hand}/>
+             
             </div>
+            <Hand idxs={fieldOrders?.playerfields?.filter(x=>x=='+buttons')} hand={room.view?.hand}/>  
+
+            {debugHand &&
+            <div className="border-2 border-black flex flex-col items-center">
+            <Hand idxs={fieldOrders?.playerfields} hand={{top: debugHand.real.hand as any}}/>
+            </div>}
+
+            {debugHand &&
+            <div className="border-2 border-black flex flex-col items-center">
+            <Hand idxs={fieldOrders?.gamefields} hand={{top: debugHand.real.table as any}}/>
+            </div>}
+                
             <button onClick={deleteRoom}>
                 Delete room
             </button>
