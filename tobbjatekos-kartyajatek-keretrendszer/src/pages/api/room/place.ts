@@ -5,6 +5,360 @@ import type { Database } from '../../../assets/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { CardData } from '@/components/hand'
 
+export default async (req: NextApiRequest, res: NextApiResponse) => {
+    const supabaseServerClient = createServerSupabaseClient<Database>({
+        req,
+        res,
+    })
+    const {
+        data: { user },
+    } = await supabaseServerClient.auth.getUser()
+
+    const { handidx, cardidx } = req.body
+
+    if (!user) {
+        res.status(401).json({ error: "Unauthorized" })
+        return;
+    }
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.PRIVATE_SERVICE_KEY;
+
+    if (!url || !key) {
+        res.status(500).json({ error: "Missing environment variables" })
+        return;
+    }
+
+
+
+    if (handidx === undefined || cardidx === undefined) {
+        res.status(400).json({ error: "Missing parameters" })
+        return;
+    }
+
+
+
+    //check if player's in started game
+    const { data } = await supabaseServerClient
+        .from('session_players')
+        .select(`
+    id,
+    session(
+        id,
+        started,
+        games(
+            gamefields,
+            playerfields,
+            init,
+            chains(
+                id,
+                games_id,
+                chain_start,
+                chain_end,
+                or_bool
+            ),
+            games_rules(
+                rules(
+                    id,
+                    name,
+                    operator,
+                    left_field,
+                    right_field,
+                    left_player,
+                    right_player,
+                    right_value,
+                    left_value,
+                    required,
+                    or_bool,
+                    exclusive,
+                    left,
+                    right,
+                    actions(
+                        left_field,
+                        right_field,
+                        action,
+                        number,
+                        left_player,
+                        right_player,
+                        right_value,
+                        left_value,
+                        operator,
+                        action_type,
+                        left,
+                        right
+                    )
+                )
+            )
+        )
+        
+    )
+    `).eq('user_id', user.id).single();
+
+
+
+    const { id: session_id, started } = data?.session as any;
+    const { id: session_players_id } = data as any;
+    if (started === undefined || session_id === undefined) {
+        res.status(400).json({ error: "Game hasn't started or doesn't exist" })
+        return;
+    }
+
+    //check if player's turn
+
+    const { data: data2 } = await supabaseServerClient
+        .from('tableview')
+        .select(`
+    current,
+    next,
+    dir,
+    sorter,
+    top
+    `).eq('session_id', session_id).single();
+
+    let { current, next, dir, top, sorter } = data2 as any;
+
+    if (current === undefined || session_players_id === undefined || current != session_players_id) {
+        res.status(400).json({ error: "Not your turn" })
+        return;
+    }
+
+    //check if card is in hand
+
+    const service = createClient(url, key);
+    const { data: data3 } = await service
+        .from('hands')
+        .select(`
+    hand
+    `).eq('session_players_id', session_players_id).single();
+
+    const { hand } = data3 as any;
+
+    const gamefields = (data as any)?.session?.games?.gamefields as any;
+    const playerfields = (data as any)?.session?.games?.playerfields as any;
+    const init = (data as any)?.session?.games?.init as any;
+
+
+    for (let field of playerfields) {
+        hand?.[field]?.sort((a: CardData, b: CardData) => {
+            return a.sorter - b.sorter;
+        });
+    }
+
+
+
+    const card = hand?.[handidx]?.[cardidx];
+
+    if (card === undefined) {
+        res.status(400).json({ error: "Card not found" })
+        return;
+    }
+
+    //check if card is playable
+    const table = top;
+
+    for (let field of gamefields) {
+        table?.[field]?.sort((a: CardData, b: CardData) => {
+            return a.sorter - b.sorter;
+        });
+    }
+
+
+
+
+    const rules = (data as any)?.session?.games?.games_rules as any ?? [];
+    const chains = (data as any)?.session?.games?.chains as any ?? [];
+
+    chains.sort((a: any, b: any) => {
+        return a?.id - b?.id;
+    });
+
+    //console.log(chains)
+
+    rules.sort((a: any, b: any) => {
+        return a?.rules?.id - b?.rules?.id;
+    });
+
+
+
+    const strength = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
+
+    const { data: data5 } = await service
+        .from('session_players')
+        .select(`
+    id
+    `).eq('session_id', session_id);
+
+    let spids = data5?.map((sp: any) => sp.id) as any;
+
+    spids.sort();
+
+
+    let playable = !(chains[0]?.or_bool ?? true)
+    let fail = false;
+    let prevname: string | null = null;
+
+    let globalfail = false;
+    let prevfail = false;
+    let broken = false;
+    let outercnt = 0;
+    let breakout: boolean = false;
+
+    for (let chain of chains) {
+        let ids = rangeArr(chain.chain_start, chain.chain_end);
+        let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chain.chain_start)?.rules?.or_bool ?? true);
+        let chaingroup = rules.filter((rule: any) => ids.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
+        if (chain.or_bool && playable && !broken) {
+            console.log("break")
+            //break;
+            broken = true;
+            globalfail = fail;
+            console.log("fail:", globalfail)
+        }
+        else if (chain.or_bool && !playable && !broken) {
+            console.log("reset fail");
+            fail = prevfail;
+        }
+
+
+        prevfail = fail;
+        console.log('prevfail', prevfail);
+        if (outercnt++ != 0) {
+            console.log('((' + playable + '))');
+            console.log(chain.or_bool ? '[OR]' : '[AND]')
+        }
+        let cnt = 0;
+        let props = { breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+
+        if(breakout)
+            break;
+
+        for (let rule of chaingroup) {
+            if (cnt++ != 0) {
+                console.log('(' + localplayable + ')');
+                console.log(rule?.rules?.or_bool ? 'OR' : 'AND')
+            }
+            let result = await evaluateRule({ ...props, rule });
+            console.log(rule?.rules?.name, result.fail ? 'fail' : '');
+            localplayable = result.playable;
+
+            dir = result.dir;
+            current = result.current;
+            next = result.next;
+            fail = fail || result.fail;
+            prevname = result.prevname;
+            sorter = result.sorter;
+            breakout = result.breakout;
+
+            props = { breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };    
+            
+            if(breakout)
+                break;
+        }
+        if (chain.or_bool)
+            playable = playable || localplayable;
+        else
+            playable = playable && localplayable;
+
+
+    }
+
+    fail = globalfail || (playable && fail);
+    playable = broken || playable;
+    console.log('fail', fail);
+    console.log('playable', playable);
+
+    if (!playable) {
+        res.status(400).json({ error: "Card not playable" })
+        return;
+    }
+
+
+
+    //remove card from hand, add to table
+
+
+    if (!fail) {
+        hand[handidx].splice(cardidx, 1);
+        top.table.push({ ...card, sorter });
+    }
+
+
+    //do card actions for nonrequired rules
+    console.log('check table',table)
+    console.log('ACTIONS')
+    let acnt = 0;
+    let playable2 = false;
+
+    breakout = false;
+
+    for (let rule of rules.filter((rule: any) => !rule?.rules?.required && (rule?.rules?.exclusive==1 || !fail))) {
+
+        let props = { breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        if (acnt++ > 0) {
+            console.log('(' + playable2 + ')');
+            console.log(rule.rules.or_bool ? 'OR' : 'AND');
+        }
+        let result = await evaluateRule({ ...props, rule });
+        console.log(rule?.rules?.name);
+        dir = result.dir;
+        current = result.current;
+        next = result.next;
+        fail = fail || result.fail;
+        prevname = result.prevname;
+        sorter = result.sorter;
+        playable2 = result.playable;
+        breakout = result.breakout;
+
+        props = { breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+
+        if(breakout)
+            break;
+
+    }
+
+    //update hand
+    //next player's turn
+
+    const { data: newdata } = await service
+        .from('hands')
+        .update({ hand: hand })
+        .eq('session_players_id', session_players_id)//.select().single();
+    //const { hand: newhand} = newdata as any;
+
+    await service.
+        from('tableview')
+        .update({ current: next, next: spids[(spids.indexOf(next) + dir) % spids.length], top: { ...top, table: top.table }, sorter })
+        .eq('session_id', session_id);
+
+    //update view
+
+    // build handview, third person view of hand
+    let topview = { ...hand };//{ ...newhand };
+    let outerview = { ...hand };//{ ...newhand };
+    for (let field of playerfields) {
+        const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
+        topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
+        outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
+
+    }
+    await service.from('handview')
+        .update({ top: topview })
+        .eq('session_players_id', session_players_id);
+
+    await service.from('session_players')
+        .update({ hand: outerview })
+        .eq('id', session_players_id);
+
+
+
+
+
+    res.status(200).json({ message: "Card played" })
+
+}
+
+
 function rangeArr(min: number, max: number) {
     var len = max - min + 1;
     var arr = new Array(len);
@@ -745,358 +1099,5 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
     prevname = rule?.rules?.name;
 
     return { breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-
-}
-
-export default async (req: NextApiRequest, res: NextApiResponse) => {
-    const supabaseServerClient = createServerSupabaseClient<Database>({
-        req,
-        res,
-    })
-    const {
-        data: { user },
-    } = await supabaseServerClient.auth.getUser()
-
-    const { handidx, cardidx } = req.body
-
-    if (!user) {
-        res.status(401).json({ error: "Unauthorized" })
-        return;
-    }
-
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.PRIVATE_SERVICE_KEY;
-
-    if (!url || !key) {
-        res.status(500).json({ error: "Missing environment variables" })
-        return;
-    }
-
-
-
-    if (handidx === undefined || cardidx === undefined) {
-        res.status(400).json({ error: "Missing parameters" })
-        return;
-    }
-
-
-
-    //check if player's in started game
-    const { data } = await supabaseServerClient
-        .from('session_players')
-        .select(`
-    id,
-    session(
-        id,
-        started,
-        games(
-            gamefields,
-            playerfields,
-            init,
-            chains(
-                id,
-                games_id,
-                chain_start,
-                chain_end,
-                or_bool
-            ),
-            games_rules(
-                rules(
-                    id,
-                    name,
-                    operator,
-                    left_field,
-                    right_field,
-                    left_player,
-                    right_player,
-                    right_value,
-                    left_value,
-                    required,
-                    or_bool,
-                    exclusive,
-                    left,
-                    right,
-                    actions(
-                        left_field,
-                        right_field,
-                        action,
-                        number,
-                        left_player,
-                        right_player,
-                        right_value,
-                        left_value,
-                        operator,
-                        action_type,
-                        left,
-                        right
-                    )
-                )
-            )
-        )
-        
-    )
-    `).eq('user_id', user.id).single();
-
-
-
-    const { id: session_id, started } = data?.session as any;
-    const { id: session_players_id } = data as any;
-    if (started === undefined || session_id === undefined) {
-        res.status(400).json({ error: "Game hasn't started or doesn't exist" })
-        return;
-    }
-
-    //check if player's turn
-
-    const { data: data2 } = await supabaseServerClient
-        .from('tableview')
-        .select(`
-    current,
-    next,
-    dir,
-    sorter,
-    top
-    `).eq('session_id', session_id).single();
-
-    let { current, next, dir, top, sorter } = data2 as any;
-
-    if (current === undefined || session_players_id === undefined || current != session_players_id) {
-        res.status(400).json({ error: "Not your turn" })
-        return;
-    }
-
-    //check if card is in hand
-
-    const service = createClient(url, key);
-    const { data: data3 } = await service
-        .from('hands')
-        .select(`
-    hand
-    `).eq('session_players_id', session_players_id).single();
-
-    const { hand } = data3 as any;
-
-    const gamefields = (data as any)?.session?.games?.gamefields as any;
-    const playerfields = (data as any)?.session?.games?.playerfields as any;
-    const init = (data as any)?.session?.games?.init as any;
-
-
-    for (let field of playerfields) {
-        hand?.[field]?.sort((a: CardData, b: CardData) => {
-            return a.sorter - b.sorter;
-        });
-    }
-
-
-
-    const card = hand?.[handidx]?.[cardidx];
-
-    if (card === undefined) {
-        res.status(400).json({ error: "Card not found" })
-        return;
-    }
-
-    //check if card is playable
-    const table = top;
-
-    for (let field of gamefields) {
-        table?.[field]?.sort((a: CardData, b: CardData) => {
-            return a.sorter - b.sorter;
-        });
-    }
-
-
-
-
-    const rules = (data as any)?.session?.games?.games_rules as any ?? [];
-    const chains = (data as any)?.session?.games?.chains as any ?? [];
-
-    chains.sort((a: any, b: any) => {
-        return a?.id - b?.id;
-    });
-
-    //console.log(chains)
-
-    rules.sort((a: any, b: any) => {
-        return a?.rules?.id - b?.rules?.id;
-    });
-
-
-
-    const strength = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-    const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
-
-    const { data: data5 } = await service
-        .from('session_players')
-        .select(`
-    id
-    `).eq('session_id', session_id);
-
-    let spids = data5?.map((sp: any) => sp.id) as any;
-
-    spids.sort();
-
-
-    let playable = !(chains[0]?.or_bool ?? true)
-    let fail = false;
-    let prevname: string | null = null;
-
-    let globalfail = false;
-    let prevfail = false;
-    let broken = false;
-    let outercnt = 0;
-    let breakout: boolean = false;
-
-    for (let chain of chains) {
-        let ids = rangeArr(chain.chain_start, chain.chain_end);
-        let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chain.chain_start)?.rules?.or_bool ?? true);
-        let chaingroup = rules.filter((rule: any) => ids.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
-        if (chain.or_bool && playable && !broken) {
-            console.log("break")
-            //break;
-            broken = true;
-            globalfail = fail;
-            console.log("fail:", globalfail)
-        }
-        else if (chain.or_bool && !playable && !broken) {
-            console.log("reset fail");
-            fail = prevfail;
-        }
-
-
-        prevfail = fail;
-        console.log('prevfail', prevfail);
-        if (outercnt++ != 0) {
-            console.log('((' + playable + '))');
-            console.log(chain.or_bool ? '[OR]' : '[AND]')
-        }
-        let cnt = 0;
-        let props = { breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-
-        if(breakout)
-            break;
-
-        for (let rule of chaingroup) {
-            if (cnt++ != 0) {
-                console.log('(' + localplayable + ')');
-                console.log(rule?.rules?.or_bool ? 'OR' : 'AND')
-            }
-            let result = await evaluateRule({ ...props, rule });
-            console.log(rule?.rules?.name, result.fail ? 'fail' : '');
-            localplayable = result.playable;
-
-            dir = result.dir;
-            current = result.current;
-            next = result.next;
-            fail = fail || result.fail;
-            prevname = result.prevname;
-            sorter = result.sorter;
-            breakout = result.breakout;
-
-            props = { breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };    
-            
-            if(breakout)
-                break;
-        }
-        if (chain.or_bool)
-            playable = playable || localplayable;
-        else
-            playable = playable && localplayable;
-
-
-    }
-
-    fail = globalfail || (playable && fail);
-    playable = broken || playable;
-    console.log('fail', fail);
-    console.log('playable', playable);
-
-    if (!playable) {
-        res.status(400).json({ error: "Card not playable" })
-        return;
-    }
-
-
-
-    //remove card from hand, add to table
-
-
-    if (!fail) {
-        hand[handidx].splice(cardidx, 1);
-        top.table.push({ ...card, sorter });
-    }
-
-
-    //do card actions for nonrequired rules
-    console.log('check table',table)
-    console.log('ACTIONS')
-    let acnt = 0;
-    let playable2 = false;
-
-    breakout = false;
-
-    for (let rule of rules.filter((rule: any) => !rule?.rules?.required && (rule?.rules?.exclusive==1 || !fail))) {
-
-        let props = { breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-        if (acnt++ > 0) {
-            console.log('(' + playable2 + ')');
-            console.log(rule.rules.or_bool ? 'OR' : 'AND');
-        }
-        let result = await evaluateRule({ ...props, rule });
-        console.log(rule?.rules?.name);
-        dir = result.dir;
-        current = result.current;
-        next = result.next;
-        fail = fail || result.fail;
-        prevname = result.prevname;
-        sorter = result.sorter;
-        playable2 = result.playable;
-        breakout = result.breakout;
-
-        props = { breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-
-        if(breakout)
-            break;
-
-    }
-
-    //update hand
-    //next player's turn
-
-    const { data: newdata } = await service
-        .from('hands')
-        .update({ hand: hand })
-        .eq('session_players_id', session_players_id)//.select().single();
-    //const { hand: newhand} = newdata as any;
-
-    await service.
-        from('tableview')
-        .update({ current: next, next: spids[(spids.indexOf(next) + dir) % spids.length], top: { ...top, table: top.table }, sorter })
-        .eq('session_id', session_id);
-
-    //update view
-
-    // build handview, third person view of hand
-    let topview = { ...hand };//{ ...newhand };
-    let outerview = { ...hand };//{ ...newhand };
-    for (let field of playerfields) {
-        const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
-        topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
-        outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
-
-    }
-    await service.from('handview')
-        .update({ top: topview })
-        .eq('session_players_id', session_players_id);
-
-    await service.from('session_players')
-        .update({ hand: outerview })
-        .eq('id', session_players_id);
-
-
-
-
-
-    res.status(200).json({ message: "Card played" })
 
 }
