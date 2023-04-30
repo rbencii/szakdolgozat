@@ -141,10 +141,22 @@ export default function Editor() {
                 })
             }
             </div> */}
+
+            <h1 className="text-xl">-- card is placed --</h1>
+
             <div className="text-center [&_span:first-of-type>span]:hidden">
-                    <h1 className="text-xl">effects</h1>
+                    <h1 className="text-xl">effects WHEN NOT FAIL</h1>
             {games.game &&
-                games.loadedgame?.games_rules?.filter((rule: {rules: Ruletype})=>!rule.rules.required).map((rule: {rules: Ruletype}, i: number)=>{
+                games.loadedgame?.games_rules?.filter((rule: {rules: Ruletype})=>!rule.rules.required && rule?.rules?.exclusive!=1).map((rule: {rules: Ruletype}, i: number)=>{
+
+                    return <div key={i}>{rule.rules.name}</div>
+                })
+            }
+            </div>
+            <div className="text-center [&_span:first-of-type>span]:hidden">
+                    <h1 className="text-xl">effects ALWAYS</h1>
+            {games.game &&
+                games.loadedgame?.games_rules?.filter((rule: {rules: Ruletype})=>!rule.rules.required && rule?.rules?.exclusive==1).map((rule: {rules: Ruletype}, i: number)=>{
 
                     return <div key={i}>{rule.rules.name}</div>
                 })
@@ -152,11 +164,14 @@ export default function Editor() {
             </div>
             {games.game &&
                 games.loadedgame?.games_rules?.map((rule: {rules: Ruletype}, i: number)=>{
-                    return <Rule key={i} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
+                    return <Rule playerfields={games.loadedgame?.playerfields} gamefields={games.loadedgame?.gamefields} key={i} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
                 })
             }
             {games.game && <button onClick={()=>newRule()}> add new rule</button>}
         </div>
+
+       
+
         </main>
     )
 }

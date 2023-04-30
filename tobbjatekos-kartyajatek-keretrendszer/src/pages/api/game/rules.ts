@@ -24,6 +24,8 @@ let { data: games, error } = await supabaseServerClient
 .select(`
     id,
     name,
+    playerfields,
+    gamefields,
     chains(
         id,
         games_id,
@@ -45,6 +47,8 @@ let { data: games, error } = await supabaseServerClient
             required,
             or_bool,
             exclusive,
+            left,
+            right,
             actions(
                 id,
                 left_field,
@@ -56,7 +60,9 @@ let { data: games, error } = await supabaseServerClient
                 action_type,
                 operator,
                 left_value,
-                right_value
+                right_value,
+                left,
+                right
             )
         )
     )

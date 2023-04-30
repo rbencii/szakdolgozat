@@ -46,6 +46,27 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const { id } = data;
+
+
+    const { data: data3, error: error3 } = await service
+    .from('session')
+    .select(`
+    session_players (id),
+    games (playercount, gamefields, playerfields, init, deckcount)
+    `).eq('id', id).single();
+
+    if(!data3 || !data3?.session_players || !data3?.games){
+        res.status(424).json({ error: "Failed Dependency" })
+        return;
+    }
+
+    const spIDs = (data3.session_players as {id:any}[]).map((sp:{id:any}) => sp.id);
+    const { playercount, playerfields, gamefields, init, deckcount} = data3.games as any;
+
+    if(spIDs.length < 2 || spIDs.length > playercount){
+        res.status(400).json({ error: "Too many or too few players" })
+        return;
+    }
    
     const values = [ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", ];
     const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
@@ -55,6 +76,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       for (let v = 0; v < values.length; v++) {
         const value = values[v];
         const suit = suits[s];
+
+        for(let deckcounter=0;deckcounter<deckcount;deckcounter++)
         cards.push({ value, suit, sorter: 0 });
       }
     }
@@ -66,25 +89,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     for(let card of cards)
       card.sorter = sorter++;
 
-    const { data: data3, error: error3 } = await service
-    .from('session')
-    .select(`
-    session_players (id),
-    games (playercount, gamefields, playerfields, init)
-    `).eq('id', id).single();
-
-    if(!data3 || !data3?.session_players || !data3?.games){
-        res.status(424).json({ error: "Failed Dependency" })
-        return;
-    }
-
-    const spIDs = (data3.session_players as {id:any}[]).map((sp:{id:any}) => sp.id);
-    const { playercount, playerfields, gamefields, init} = data3.games as any;
-
-    if(spIDs.length < 2 || spIDs.length > playercount){
-        res.status(400).json({ error: "Too many or too few players" })
-        return;
-    }
+    
 
     for(let spID of spIDs){
     const hand: any = {};
