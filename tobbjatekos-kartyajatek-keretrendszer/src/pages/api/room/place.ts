@@ -1014,6 +1014,9 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     break;
                 case 'setcard':
                     const sorter2 = left?.[left_value]?.sorter;
+                    if(rightSw=='cv')
+                    left[left_value] = { suit: card?.suit, value: card?.value, sorter: sorter2 ?? sorter++ };
+                    else
                     left[left_value] = { suit: right.slice(right_value)[0]?.suit, value: right.slice(right_value)[0]?.value, sorter: sorter2 ?? sorter++ };
                     update = true;
                     break;
