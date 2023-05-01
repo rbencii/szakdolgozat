@@ -326,7 +326,7 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
             }
 
             </div>
-            <div className="border-2 border-black flex flex-col items-center w-56">
+            <div className="border-2 border-black flex flex-col items-center w-screen">
             
             <Hand idxs={fieldOrders?.gamefields} hand={room.view?.table as any}/>
             </div>
