@@ -172,9 +172,11 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
             console.log('insert')
             setRoom((prev)=>{
                 if(prev){
+                    let players = [...prev.players, {id, name, hand:null}];
+                    players.sort();
                 return {
                     ...prev,
-                    players: [...prev.players, {id, name, hand:null}]
+                    players
                 }
                 }
                 return prev;
@@ -317,13 +319,14 @@ export default function Rooms({supabase, session}: {supabase: SupabaseClient<any
             
             {room.players.filter(player=>player.id!==room?.you).map((player)=>
                 <div key={player.id} className="border-2 border-black flex flex-col items-center" style={{borderColor: room.view?.table?.current===player.id?'lime':''}}>  
+                <div>{player?.name}</div>
                 <Hand idxs={fieldOrders?.playerfields?.filter(x=>x!='+buttons')} hand={{top: player.hand as any}}/>
                 </div>
             )
             }
 
             </div>
-            <div className="border-2 border-black flex flex-col items-center">
+            <div className="border-2 border-black flex flex-col items-center w-56">
             
             <Hand idxs={fieldOrders?.gamefields} hand={room.view?.table as any}/>
             </div>

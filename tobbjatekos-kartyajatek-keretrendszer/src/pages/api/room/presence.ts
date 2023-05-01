@@ -50,6 +50,8 @@ tableview(
 
 const { started } = session as any;
 
+names?.sort((a,b) => a.id - b.id);
+
   const resp = {you:spid, id:id ,players: names?.map(x=>(x as any)={id:x?.id, name: x?.name, hand: x?.hand}), started, view:{hand:names?.find(x=>x?.id===spid)?.handview, table:session?.tableview}}
 
   res.status(200).json({ resp, error, error2 })

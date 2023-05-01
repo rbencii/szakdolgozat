@@ -115,12 +115,12 @@ export default function Editor() {
 
                             return (
                                 <div onClick={()=>deleteChain(chain.id)} key={i}>
-                                    <div>{chain.or_bool?'OR':'AND'}</div>
+                                    <div>{chain.or_bool?'OR':'AND'} ({chain.id})</div>
                                     {rules?.map((rule: any, i: number)=>{
                                         return (
                                             <span key={i}>
                                                 {rule.rules.or_bool?<span> OR </span>:<span> AND </span>}
-                                                {rule.rules.name}
+                                                {rule.rules.name} ({rule.rules.id})
                                             </span>
                                         )
                                     })}

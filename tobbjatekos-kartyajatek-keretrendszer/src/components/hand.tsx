@@ -18,10 +18,14 @@ export default function Hand({hand, idxs: indexes}: {hand: {top: any}, idxs: str
     if(tablecount!==undefined)
         delete top.tablecount;
         
+        let isTable = false;
     if(top?.draw!==undefined){
         draw=top.draw?true:false;
         delete top.draw;
+        isTable=true;
     }
+
+
     const idxs = indexes.length==0?Object.keys(top):indexes;
     for(let idx of idxs){
         top[idx].sort((a: CardData, b: CardData) => a.sorter - b.sorter);
@@ -47,11 +51,11 @@ export default function Hand({hand, idxs: indexes}: {hand: {top: any}, idxs: str
         <>
             {draw && tablecount && <div className="flex gap-2.5">{tablecount}<Card card={{suit: 'hidden', value: 'hidden'} as any}/></div>}
             {idxs.map((idx)=>
-            <div className="flex flex-wrap gap-2.5" key={idx}>
+            <div className="flex flex-wrap gap-2.5 relative" style={isTable ? {transform: 'translateX(-50%)', left: '1rem'}: {}} key={idx}>
                 
                 {top[idx].map((card: CardData, i: number)=>
                 <div key={i} onClick={()=>place(idx,i)}>
-                <Card card={card}/>
+                <Card style={isTable?{opacity: `${70-(((top[idx].length-2)-i)*20)}%`}:{}} card={card}/>
                 </div>
                 )}
             </div>

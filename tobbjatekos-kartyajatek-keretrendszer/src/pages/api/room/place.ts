@@ -74,6 +74,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                     left,
                     right,
                     actions(
+                        id,
                         left_field,
                         right_field,
                         action,
@@ -197,12 +198,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     let playable = !(chains[0]?.or_bool ?? true)
     let fail = false;
     let prevname: string | null = null;
-
+    let prevDoAction: boolean = false;
     let globalfail = false;
     let prevfail = false;
     let broken = false;
     let outercnt = 0;
     let breakout: boolean = false;
+    let continueout: boolean = false;
 
     let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chains?.[0]?.chain_start)?.rules?.or_bool ?? true);
     for (let chain of chains) {
@@ -230,10 +232,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             console.log(chain.or_bool ? '[OR]' : '[AND]')
         }
         let cnt = 0;
-        let props = { breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        let props = { prevDoAction , continueout, breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
         if(breakout)
             break;
+
+        if(continueout){
+            console.log('!!!!!!!!!!!!!!!!!!!!continued!!!!!!!!!!!!!!!!!!!')
+            continueout=false;
+            continue;
+        }
 
         for (let rule of chaingroup) {
             if (cnt++ != 0) {
@@ -249,12 +257,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             next = result.next;
             fail = fail || result.fail;
             prevname = result.prevname;
+            prevDoAction = result.prevDoAction;
             sorter = result.sorter;
             breakout = result.breakout;
+            continueout = result.continueout;
 
-            props = { breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };    
+            props = { prevDoAction, continueout, breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };    
             
             if(breakout)
+                break;
+
+            if(continueout)
                 break;
         }
         if (chain.or_bool)
@@ -293,10 +306,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     let playable2 = false;
 
     breakout = false;
+    continueout = false;
+    prevDoAction=false;
 
     for (let rule of rules.filter((rule: any) => !rule?.rules?.required && (rule?.rules?.exclusive==1 || !fail))) {
 
-        let props = { breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        let props = { prevDoAction , continueout, breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
         if (acnt++ > 0) {
             console.log('(' + playable2 + ')');
             console.log(rule.rules.or_bool ? 'OR' : 'AND');
@@ -308,11 +323,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         next = result.next;
         fail = fail || result.fail;
         prevname = result.prevname;
+        prevDoAction = result.prevDoAction;
         sorter = result.sorter;
         playable2 = result.playable;
         breakout = result.breakout;
 
-        props = { breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        props = { prevDoAction , continueout, breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
         if(breakout)
             break;
@@ -370,7 +386,7 @@ function rangeArr(min: number, max: number) {
     return arr;
 }
 
-async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand: handRef, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top }: { breakout: boolean, sorter: number, prevname: string | null, fail: boolean, cardidx: number, playable: boolean, rule: any, strength: any, card: any, init: any, playerfields: any, hand: any, service: any, spids: any, session_players_id: any, dir: any, table: any, gamefields: any, handidx: any, session_id: any, current: any, next: any, top: any }) {
+async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand: handRef, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top }: { prevDoAction: boolean, continueout: boolean, breakout: boolean, sorter: number, prevname: string | null, fail: boolean, cardidx: number, playable: boolean, rule: any, strength: any, card: any, init: any, playerfields: any, hand: any, service: any, spids: any, session_players_id: any, dir: any, table: any, gamefields: any, handidx: any, session_id: any, current: any, next: any, top: any }) {
 
 
 
@@ -761,12 +777,21 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     break;
             }
 
+            if(rule?.rules?.required && prevname == rule?.rules?.name && actions!==null){
+                playable = prevplayable;
+                doAction = prevDoAction;
+            }
+
         // if (rule?.rules?.name.includes('top'))
         // console.log(rule?.rules?.name,': ',left, operator, right)
         // console.log('doaction', doAction);
+        console.log('                                                                                 left',left)
+        console.log('                                                                                 ',operator)
+        console.log('                                                                                 right',right)
         if (doAction) {
             console.log('DOING ------>', actions?.action);
             const { left: leftSw, right: rightSw, action, left_field, right_field, number, action_type, operator, left_player, right_player, left_value, right_value } = actions;
+            console.log('leftsw', leftSw, 'rightsw', rightSw, 'rule id', rule?.rules?.id, 'action id', actions?.id)
             let left, right;
 
 
@@ -982,12 +1007,14 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     update = true;
                     break;
                 case 'move_lv_l_to_r':
+                    console.log('LEFTSW',leftSw)
                     if (leftSw == 'cv') {
                         const start = Math.max(right.length - 1, 0);
                         right.push(hand[handidx]?.splice(cardidx, 1)[0])
                         for (let i = start; i < right.length; i++) {
                             right[i].sorter = sorter++;
                         }
+                        console.log('right MOVE', right);
                         if (right)
                             update = true;
                         break;
@@ -1022,6 +1049,9 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     const sorter2 = left?.[left_value]?.sorter;
                     if(rightSw=='cv')
                     left[left_value] = { suit: card?.suit, value: card?.value, sorter: sorter2 ?? sorter++ };
+                    else if(rightSw=='value'){
+                    left[left_value]={suit: ['Diamonds', 'Hearts', 'Spades', 'Clubs'][right_player % 4], value: strength[right_value % strength.length], sorter: left?.[left_value]??sorter++}
+                    }
                     else
                     left[left_value] = { suit: right.slice(right_value)[0]?.suit, value: right.slice(right_value)[0]?.value, sorter: sorter2 ?? sorter++ };
                     update = true;
@@ -1043,6 +1073,9 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     break;
                 case 'breakchain':
                     breakout = true;
+                    break;
+                case 'continuechain':
+                    continueout = true;
                     break;
             }
 
@@ -1106,7 +1139,7 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
         }
     }
     prevname = rule?.rules?.name;
-
-    return { breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+    prevDoAction = doAction;
+    return {prevDoAction, continueout, breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
 }

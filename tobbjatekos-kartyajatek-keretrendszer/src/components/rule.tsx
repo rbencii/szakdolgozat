@@ -619,6 +619,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                         }
                         {left?.includes('gf') &&
                             <select className="border text-center" name="left_player" id="left_player" onChange={handleInput} value={left_player ?? ''}>
+                                <option value="">from</option>
                                 <option value="0">Tabletop</option>
                                 <option value="1">Deck</option>
                             </select>}
@@ -655,6 +656,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                         }
                         {right?.includes('gf') &&
                             <select className="border text-center" name="right_player" id="right_player" onChange={handleInput} value={right_player ?? ''}>
+                                <option value="">from</option>
                                 <option value="0">Tabletop</option>
                                 <option value="1">Deck</option>
                             </select>}
@@ -730,6 +732,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
             <option value="setsuit">Set Left Card Suit to Right</option>
             <option value="dir">Set Round Direction to Right</option>
             <option value="breakchain">Break Chain</option>
+            <option value="continuechain">Continue Chain</option>
         </select>
 
         <select name="actions.right" id="actions.right" className="border text-center" onChange={handleActionInput} value={actions?.right ?? ''}>
@@ -765,6 +768,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
             }
             {actions.left?.includes('gf') &&
                 <select className="border text-center" name="actions.left_player" id="actions.left_player" onChange={handleActionInput} value={actions?.left_player ?? ''}>
+                    <option value="">from</option>
                     <option value="0">Tabletop</option>
                     <option value="1">Deck</option>
                 </select>}
@@ -801,6 +805,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
             }
             {actions.right?.includes('gf') &&
                 <select className="border text-center" name="actions.right_player" id="actions.right_player" onChange={handleActionInput} value={actions?.right_player ?? ''}>
+                    <option value="">from</option>
                     <option value="0">Tabletop</option>
                     <option value="1">Deck</option>
                 </select>}

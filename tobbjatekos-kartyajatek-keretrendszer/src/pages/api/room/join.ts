@@ -35,6 +35,8 @@ let { data: names } = await supabaseServerClient
 .select("id")
 .eq('user_id', user.id).single()
 
+  names?.sort((a,b) => a.id - b.id);
+
   const resp = {you: spme?.id,id:data?.session_id ,players: names, started: false}
 
   if (error) {
