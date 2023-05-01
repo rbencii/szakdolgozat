@@ -204,9 +204,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     let outercnt = 0;
     let breakout: boolean = false;
 
+    let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chains?.[0]?.chain_start)?.rules?.or_bool ?? true);
     for (let chain of chains) {
         let ids = rangeArr(chain.chain_start, chain.chain_end);
-        let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chain.chain_start)?.rules?.or_bool ?? true);
+        if(outercnt>0)
+        localplayable = playable;
         let chaingroup = rules.filter((rule: any) => ids.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
         if (chain.or_bool && playable && !broken) {
             console.log("break")
