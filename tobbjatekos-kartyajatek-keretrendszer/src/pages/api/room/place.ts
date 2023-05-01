@@ -241,7 +241,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
                 console.log(rule?.rules?.or_bool ? 'OR' : 'AND')
             }
             let result = await evaluateRule({ ...props, rule });
-            console.log(rule?.rules?.name, result.fail ? 'fail' : '');
+            console.log(rule?.rules?.name, result.playable , result.fail ? 'fail' : '');
             localplayable = result.playable;
 
             dir = result.dir;
@@ -330,7 +330,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     await service.
         from('tableview')
-        .update({ current: next, next: spids[(spids.indexOf(next) + dir) % spids.length], top: { ...top, table: top.table }, sorter })
+        .update({ current: next, next: spids[(spids.indexOf(next) + dir) % spids.length], top: { ...top, table: top.table }, sorter, dir: dir })
         .eq('session_id', session_id);
 
     //update view
@@ -355,7 +355,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
 
 
-
+        console.log('---------------------------------------------------------------------------------------------------------------------')
     res.status(200).json({ message: "Card played" })
 
 }
@@ -496,7 +496,7 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
             break;
         case 'gfc': //gamefield card count
             left = tableAbove?.[gamefields?.[left_field]]?.length;
-            console.log('gfc', tableAbove)
+            //console.log('gfc', tableAbove)
             break;
         case 'pf': //playerfield
             left = hand?.[playerfields?.[left_field]];
@@ -589,8 +589,9 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                         playable = playable && (left <= right);
                     break;
                 case '==':
-                    if(leftSwitch=='gfc' && rightSwitch=='value' && right==0)
-                        console.log('!!!left',left,'!!!right',right)
+                    if(leftSwitch=='gfc' && rightSwitch=='value' && right==0){
+                        console.log('!!!left',left,'==','!!!right',right)
+                    }
 
                     if (or_bool)
                         playable = playable || (left === right);
@@ -630,7 +631,7 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     break;
 
                 case 'r_count_in_l_ge':
-                    console.log('number of ',right,' in ', left , '>= 1 playable')
+                    //console.log('number of ',right,' in ', left , '>= 1 playable')
                     if (['value', 'gfcv', 'pfcv', 'cv'].includes(rightSwitch)) {
                         if (or_bool)
                             playable = playable || (left?.map((x: any) => strength.indexOf(x?.value))?.filter((x: any) => x == right)?.length >= left_value);
@@ -690,6 +691,7 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     doAction = (left <= right);
                     break;
                 case '==':
+                    console.log('left', left, '==', 'right', right)
                     doAction = (left === right);
                     break;
                 case '!=':
@@ -709,7 +711,7 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     }
                     break;
                 case 'r_count_in_l_ge':
-                    console.log('number of ',right,' in ', left , 'action')
+                    //console.log('number of ',right,' in ', left , 'action')
 
                     if (['value', 'gfcv', 'pfcv', 'cv'].includes(rightSwitch)) {
                         doAction = (left?.map((x: any) => strength.indexOf(x?.value))?.filter((x: any) => x == right)?.length >= left_value);
@@ -763,6 +765,7 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
         // console.log(rule?.rules?.name,': ',left, operator, right)
         // console.log('doaction', doAction);
         if (doAction) {
+            console.log('DOING ------>', actions?.action);
             const { left: leftSw, right: rightSw, action, left_field, right_field, number, action_type, operator, left_player, right_player, left_value, right_value } = actions;
             let left, right;
 
@@ -804,10 +807,10 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                 //tableAbove = table3;
                 rtable = table3;
 
-                console.log('RTABLE', rtable);
-                console.log('rightSw', rightSw);
-                console.log('rule',rule?.rules?.name)
-                console.log('dir',dir,'next', next)
+                //console.log('RTABLE', rtable);
+                //console.log('rightSw', rightSw);
+                //console.log('rule',rule?.rules?.name)
+                //console.log('dir',dir,'next', next)
             }
             else
                 rtable = table;
@@ -965,7 +968,8 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                     break;
 
             }
-
+            console.log('action left:', left);
+            console.log('action right:', right);
             let update = false;
             switch (action) {
                 case 'fill_l_from_r':
@@ -1011,8 +1015,8 @@ async function evaluateRule({ breakout, sorter, prevname, fail, cardidx, playabl
                 case 'next':
                     next = spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
 
-                    if(next == session_players_id)
-                    console.log('ITT LESZ NEXT 0',rule?.rules?.name)
+                    //if(next == session_players_id)
+                    //console.log('ITT LESZ NEXT 0',rule?.rules?.name)
                     break;
                 case 'setcard':
                     const sorter2 = left?.[left_value]?.sorter;
