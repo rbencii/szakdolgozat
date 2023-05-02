@@ -111,7 +111,7 @@ export default function Card2({ card, dark }: { card: CardData, dark?: boolean }
             <div className="w-full h-full relative rounded-md flex flex-col overflow-hidden transition-all shadow-[px_0px_0px_#a4a4a4,_0px_0px_0px_#ffffff] duration-200 hover:shadow-[5px_5px_16px_#a4a4a4_,_-4px_-4px_15px_#ffffff] group-hover:-translate-y-2">
  
                     <div className="w-full font-bold text-black/25 group-hover:text-black shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] group-hover:shadow-[inset_0px_0px_0px_#ffffff_,_inset_0px_0px_0px_#ffffff] group-hover:duration-200 duration-1000 transition-all pointer-events-none h-full bg-white/[33%] border-2 border-white/20 rounded-md leading-none flex flex-col justify-center items-center">
-                    <div>??</div>
+                    <div>{card?.value=='hidden'?'??':card?.suit}</div>
 
                 </div>
             </div>
@@ -136,7 +136,7 @@ export default function Card2({ card, dark }: { card: CardData, dark?: boolean }
 
              
                 <div className="w-full justify-center items-center font-bold shadow-[inset_5px_5px_16px_#21232b_,_inset_-6px_-6px_15px_#2d2f3a] group-hover:shadow-[inset_0px_0px_0px_#2d2f3a_,_inset_0px_0px_0px_#2d2f3a] group-hover:duration-200 duration-1000 transition-all pointer-events-none h-full bg-[#272932]/[33%] border-2 border-[#272932]/20 rounded-md leading-none p-1 flex flex-col">
-                    <div>??</div>
+                    <div>{card?.value=='hidden'?'??':card?.suit}</div>
                 </div>
             
             </div>
