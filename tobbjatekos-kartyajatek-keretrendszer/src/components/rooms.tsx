@@ -348,7 +348,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                 <div className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-8 rounded-md "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
                     {fieldOrders?.playerfields?.[0] &&
-                        <div className="w-[32rem] h-40">
+                        <div className="w-[30.8rem] h-40">
 
                             <Hand dark={dark} idxs={[fieldOrders.playerfields[0]]} hand={room.view?.hand} />
 
