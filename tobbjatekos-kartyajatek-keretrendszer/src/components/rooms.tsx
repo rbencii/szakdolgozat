@@ -314,7 +314,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
     if (room?.started)
         return (
-            <div className="flex flex-col gap-2 flex-wrap items-center justify-between w-full h-full" style={!dark ? { backgroundColor: '#e0e0e0' } : { backgroundColor: '#121212' }}>
+            <div className={"flex flex-col gap-2 flex-wrap items-center justify-between w-full h-full "+(dark?'dark':'')} style={!dark ? { backgroundColor: '#e0e0e0' } : { backgroundColor: '#121212' }}>
 
                 {/* <div className="flex flex-wrap justify-between">
                 {room.players.filter(player => player.id !== room?.you).map((player) =>
@@ -330,8 +330,8 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                     {room.players.filter(player => player.id !== room?.you).map((player) =>
                         // <div key={player.id} className="scale-75 flex flex-col items-center" style={{ borderColor: room.view?.table?.current === player.id ? 'lime' : '' }}>
-                        <div key={player.id} className={"flex-col p-6 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
-                            <div>{player?.name}</div>
+                        <div key={player.id} className={"flex-col p-6 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
+                            <div className="dark:text-slate-300">{player?.name}</div>
                             <div className="w-[12rem] h-32">
                                 <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons' && (player.hand['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop')))} hand={{ top: player.hand as any }} />
                             </div>
@@ -342,19 +342,19 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                 </div>
 
-                <div onClick={() => { setDark(!dark) }} className="w-[18rem] h-20">
+                <div onClick={() => { setDark(!dark) }} className="w-[20rem] h-20">
                     <Hand dark={dark} idxs={fieldOrders?.gamefields} hand={room.view?.table as any} />
                 </div>
 
-                <div className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-8 "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
+                <div className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-8 rounded-md "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
                     {fieldOrders?.playerfields?.[0] &&
-                        <div className="w-[30rem] h-36">
+                        <div className="w-[32rem] h-40">
 
                             <Hand dark={dark} idxs={[fieldOrders.playerfields[0]]} hand={room.view?.hand} />
 
                         </div>
                     }
-                    <div className="w-[30rem] h-40">
+                    <div className="w-[26rem] h-36">
                         {
                             // '+handtop'
                             // '+handbottom'
