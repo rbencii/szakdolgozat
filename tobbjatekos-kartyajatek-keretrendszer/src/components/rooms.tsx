@@ -1,7 +1,9 @@
 import { RealtimeChannel, Session, SupabaseClient } from "@supabase/supabase-js";
 import { SourceMap } from "module";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Hand from '@/components/hand'
+import MouseLayer from "./mouseLayer";
+import { createSolutionBuilderWithWatchHost } from "typescript";
 
 export default function Rooms({ supabase, session }: { supabase: SupabaseClient<any, "public", any>, session: Session | null }) {
     const [room, setRoom] = useState<null | { you: number, id: string, view?: { hand: any, table: { current: number, dir: number, next: number, top: { draw: boolean, tablecount: number, table: any } | any } }, players: { id: number, name: string, hand: any }[], started: boolean }>(null);
@@ -10,6 +12,12 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
     const [debugHand, setDebugHand] = useState<any>(null);
     const [fieldOrders, setFieldOrders] = useState<{ playerfields: string[], gamefields: string[] } | null>(null);
     const [dark, setDark] = useState<boolean>(false);
+
+    const [mouses, setMouses] = useState<{ [key: number]: { x: number, y: number } }>({});
+    const ownMouse = useRef({ x: 0, y: 0 });
+    const [myText, setMyText] = useState('a');
+
+    const ownHand = useRef<HTMLDivElement>(null);
 
     const test = async () => {
         const options: RequestInit = {
@@ -151,6 +159,26 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
     useEffect(() => {
         console.log('room changed', room)
+        console.log(myText)
+        const moveFunction = (e: MouseEvent) => {
+
+            if(!ownHand.current)
+            return;
+            
+            
+            const boundingClientRect = ownHand.current.getBoundingClientRect();
+            const left = boundingClientRect.left;
+            const top = boundingClientRect.top;
+            const width = boundingClientRect.width;
+            const height = boundingClientRect.height;
+
+
+
+            ownMouse.current = {  x: (e.clientX-left)/width, y: (e.clientY-top)/height };
+
+
+        };
+
         if (fieldOrders == null)
             getFieldOrders();
 
@@ -301,7 +329,63 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                             }
                             );
                     })
-                .subscribe();
+                    .on('broadcast', {event: 'cursor'}, (payload) => {
+                            setMouses((prev) => {
+                                if (prev) {
+                                    return {
+                                        ...prev,
+                                        [payload.payload.id]: payload.payload.mouse
+                                    }
+                                }
+                                return prev;
+                            })
+                            })
+                    .on('broadcast', {event: 'text'}, (payload) => {
+                        console.log(payload)
+                        // setMouses((prev) => {
+                        //     if (prev) {
+                        //         return {
+                        //             ...prev,
+                        //             [payload.payload.id+'t']: payload.payload.text
+                        //         }
+                        //     }
+                        //     return prev;
+                        // })
+                    })
+                            .subscribe((status) => {
+                                if (status === 'SUBSCRIBED') {
+                                    setInterval(() => {
+                                        sessionPlayers.send({
+                                          type: 'broadcast',
+                                          event: 'cursor',
+                                          payload: { id:room?.you, mouse: {x: ownMouse.current.x, y: ownMouse.current.y} },
+                                        })
+                                      }, 100)
+                                }
+                            })
+
+                            if(ownHand.current){
+                            ownHand.current.addEventListener('mousemove', moveFunction);
+                                window.addEventListener('keyup', (e: KeyboardEvent) => {
+                                    //setMyText((prev) => prev+e.key)
+                                    if(sessionPlayers)
+                                    {
+
+                                        sessionPlayers.send({
+                                            type: 'broadcast',
+                                            event: 'text',
+                                            payload: { id:room?.you, text:e.key },
+                                        })
+                                        //setMyText('');
+                                        
+                                    }
+
+                                    // setText((prev) => prev+e.key
+                                    // )
+                                    // console.log(e.key)
+                                })
+                            }
+
             setSub(sessionPlayers);
         }
         else if (room && sub && room.players.length === 0) {
@@ -310,11 +394,20 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
             supabase.removeAllChannels();
             setSub(null);
         }
+
+        // return () => {
+        //     if (sub) {
+        //         sub.unsubscribe();
+        //         setSub(null);
+        //     }
+        //     window.removeEventListener('mousemove', moveFunction);
+        // }
+
     }, [room])
 
     if (room?.started)
         return (
-            <div className={"flex flex-col gap-2 flex-wrap items-center justify-between w-full h-full "+(dark?'dark':'')} style={!dark ? { backgroundColor: '#e0e0e0' } : { backgroundColor: '#121212' }}>
+            <div  className={"flex flex-col gap-2 flex-wrap items-center justify-between w-full h-full "+(dark?'dark':'')} style={!dark ? { backgroundColor: '#e0e0e0' } : { backgroundColor: '#121212' }}>
 
                 {/* <div className="flex flex-wrap justify-between">
                 {room.players.filter(player => player.id !== room?.you).map((player) =>
@@ -326,13 +419,16 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                     }
                 </div> */}
 
+
+
                 <div className="flex gap-4 items-center">
 
                     {room.players.filter(player => player.id !== room?.you).map((player) =>
                         // <div key={player.id} className="scale-75 flex flex-col items-center" style={{ borderColor: room.view?.table?.current === player.id ? 'lime' : '' }}>
-                        <div key={player.id} className={"flex-col p-6 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
+                        <div key={player.id} className={"flex-col relative p-6 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
+                            {sub && <MouseLayer id={player?.id} mouses={mouses}></MouseLayer>}
                             <div className="dark:text-slate-300">{player?.name}</div>
-                            <div className="w-[12rem] h-32">
+                            <div className="w-[12rem] h-32 rotate-180">
                                 <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons' && (player.hand['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop')))} hand={{ top: player.hand as any }} />
                             </div>
                         </div>
@@ -346,7 +442,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                     <Hand dark={dark} idxs={fieldOrders?.gamefields} hand={room.view?.table as any} />
                 </div>
 
-                <div className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-8 rounded-md "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
+                <div ref={ownHand} className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-8 rounded-md "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
                     {fieldOrders?.playerfields?.[0] &&
                         <div className="w-[30.8rem] h-40">
 
