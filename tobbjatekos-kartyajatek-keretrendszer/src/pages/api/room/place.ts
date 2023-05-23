@@ -5,6 +5,9 @@ import type { Database } from '../../../assets/supabase'
 import { createClient } from '@supabase/supabase-js'
 import { CardData } from '@/components/hand'
 
+var win = false;
+var winner = 0;
+
 export default async (req: NextApiRequest, res: NextApiResponse) => {
     const supabaseServerClient = createServerSupabaseClient<Database>({
         req,
@@ -46,7 +49,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     session(
         id,
         started,
+        owner,
         games(
+            id,
             gamefields,
             playerfields,
             init,
@@ -97,7 +102,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
 
 
-    const { id: session_id, started } = data?.session as any;
+    const { id: session_id, started, owner } = data?.session as any;
     const { id: session_players_id } = data as any;
     if (started === undefined || session_id === undefined) {
         res.status(400).json({ error: "Game hasn't started or doesn't exist" })
@@ -134,6 +139,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     const { hand } = data3 as any;
 
+    const game_id = (data as any)?.session?.games?.id as any;
     const gamefields = (data as any)?.session?.games?.gamefields as any;
     const playerfields = (data as any)?.session?.games?.playerfields as any;
     const init = (data as any)?.session?.games?.init as any;
@@ -372,7 +378,104 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
 
         console.log('---------------------------------------------------------------------------------------------------------------------')
-    res.status(200).json({ message: "Card played" })
+    
+        //win
+        if(win && winner!=null){
+
+
+            const { data: data5, error: error5 } = await service
+        .from('session_players')
+        .select(`
+    id,
+    user_id,
+    name
+    `).eq('session_id', session_id);
+
+
+        if(data5==null || error5){
+            res.status(500).json({ error: "Failed Dependency" })
+            return;
+        }
+
+        const winner_obj = data5.find((sp:any) => sp.id==winner);
+
+        const { data: data6, error: error6 } = await service
+        .from('leaderboard')
+        .select(`
+        id,
+        wins
+        `).eq('user_id', winner_obj?.user_id).eq('game_id', game_id).single();
+
+        const wins = data6?.wins ?? 0;
+        const leaderboard_id = data6?.id??null;
+
+        if(leaderboard_id==null){
+        const { data: data4, error: error4 } = await service
+        .from('leaderboard')
+        .insert([
+            {user_id:winner_obj?.user_id, name:winner_obj?.name, game_id: game_id, wins: wins+1 }
+        ]).select().single();
+
+
+            if (error4 || data4 == null) {
+                res.status(424).json({ error: "Failed Dependency" })
+                return;
+            }
+        }
+        else {
+            const { data: data4, error: error4 } = await service
+                .from('leaderboard')
+                .update({ wins: wins + 1, name: winner_obj?.name })
+                .eq('id', leaderboard_id).select().single();
+
+
+            if (error4 || data4 == null) {
+                res.status(424).json({ error: "Failed Dependency" })
+                return;
+            }
+
+        }
+
+        await service
+        .from('session')
+        .delete()
+        .eq('id', session_id);
+
+        const { data: data7, error: error7 } = await service
+        .from('session')
+        .insert
+        ([
+            {owner: owner, game: game_id}
+        ]).select().single();
+
+        if(error7 || data7==null){
+            res.status(424).json({ error: "Failed Dependency" })
+            return;
+        }
+
+        const { id: new_session_id } = data7 as any;
+
+        const { data: data8, error: error8 } = await service
+        .from('session_players')
+        .insert(
+            data5.map((sp:any) => ({user_id: sp.user_id, session_id: new_session_id, name: sp.name}))
+            )
+        .select();
+
+        if(error8 || data8==null){
+            res.status(424).json({ error: "Failed Dependency" })
+            return;
+        }
+
+        res.status(200).json({ message: "Game ended" })
+        return;
+
+
+        }
+
+        
+    
+        res.status(200).json({ message: "Card played" })
 
 }
 
@@ -1076,6 +1179,12 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     break;
                 case 'continuechain':
                     continueout = true;
+                    break;
+                case 'win':
+                    win=true;
+                    winner=spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
+                    break;
+                default:
                     break;
             }
 

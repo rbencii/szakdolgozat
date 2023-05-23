@@ -40,6 +40,7 @@ handview(
 let { data: session, error: error3 } = await supabaseServerClient
 .from('session')
 .select(`started,
+game,
 tableview(
   top,
   current,
@@ -48,11 +49,11 @@ tableview(
 )`)
 .eq('id', Number(id)).single()
 
-const { started } = session as any;
+const { started, game } = session as any;
 
 names?.sort((a,b) => a.id - b.id);
 
-  const resp = {you:spid, id:id ,players: names?.map(x=>(x as any)={id:x?.id, name: x?.name, hand: x?.hand}), started, view:{hand:names?.find(x=>x?.id===spid)?.handview, table:session?.tableview}}
+  const resp = {you:spid, id:id, game_id: game ,players: names?.map(x=>(x as any)={id:x?.id, name: x?.name, hand: x?.hand}), started, view:{hand:names?.find(x=>x?.id===spid)?.handview, table:session?.tableview}}
 
   res.status(200).json({ resp, error, error2 })
 }

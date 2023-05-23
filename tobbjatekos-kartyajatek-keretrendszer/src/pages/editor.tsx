@@ -16,6 +16,26 @@ function rangeArr(min: number, max: number) {
 export default function Editor() {
     const [games, setGames] = useState<{game:number|null, games:{id:number, name:string}[], loadedgame: any}>({game:null, games:[], loadedgame: null}); 
 
+    const copyGame = async () => {
+        if(games.game!==null){
+            const options: RequestInit = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({game_id:games.game})
+            }
+
+            const resp = await fetch(`api/game/copygame`, options);
+            const obj = await resp.json();
+            if(obj.newgame!=null){
+                await listGames();
+                setGames((prev)=>{return {...prev, game:obj.newgame.id}});
+                await loadRules();
+            }
+        }
+    }
+
     const listGames = async () => {
         const resp = await fetch('api/game/list');
         const obj = await resp.json();
@@ -92,7 +112,10 @@ export default function Editor() {
     return (
         <main className="absolute left-1/2 -translate-x-1/2 top-0">
         <div className="w-full h-full flex flex-col items-center gap-y-16 my-32">
-            <select name="games" id="games" onChange={setGame} defaultValue={""}>
+            <a href="/newgame">
+                New Game
+            </a>
+            <select name="games" id="games" onChange={setGame} value={games.game??""}>
                 <option value="" disabled>Select Game</option>
                 {
                     games.games?.map((game)=>{
@@ -102,6 +125,9 @@ export default function Editor() {
                     })
                 }
             </select>
+            <button onClick={copyGame}>
+                Copy Game
+            </button>
             { games.game && games.loadedgame?.games_rules &&
                     <Chainer refresh={()=>loadRules()} newChain={(chain)=>addChain(chain)} games_id={games.game as number} rules={games.loadedgame?.games_rules?.map((x: any)=>x?.rules)}></Chainer>
                     }

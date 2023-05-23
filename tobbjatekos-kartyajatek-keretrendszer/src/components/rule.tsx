@@ -733,6 +733,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
             <option value="dir">Set Round Direction to Right</option>
             <option value="breakchain">Break Chain</option>
             <option value="continuechain">Continue Chain</option>
+            <option value="win">Winner is Right Value</option>
         </select>
 
         <select name="actions.right" id="actions.right" className="border text-center" onChange={handleActionInput} value={actions?.right ?? ''}>

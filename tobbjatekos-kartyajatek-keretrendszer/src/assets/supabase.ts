@@ -14,11 +14,13 @@ export interface Database {
           action: string
           action_type: number | null
           id: number
+          left: string | null
           left_field: number | null
           left_player: number | null
           left_value: number | null
           number: number | null
           operator: string | null
+          right: string | null
           right_field: number | null
           right_player: number | null
           right_value: number | null
@@ -27,11 +29,13 @@ export interface Database {
           action: string
           action_type?: number | null
           id?: number
+          left?: string | null
           left_field?: number | null
           left_player?: number | null
           left_value?: number | null
           number?: number | null
           operator?: string | null
+          right?: string | null
           right_field?: number | null
           right_player?: number | null
           right_value?: number | null
@@ -40,11 +44,13 @@ export interface Database {
           action?: string
           action_type?: number | null
           id?: number
+          left?: string | null
           left_field?: number | null
           left_player?: number | null
           left_value?: number | null
           number?: number | null
           operator?: string | null
+          right?: string | null
           right_field?: number | null
           right_player?: number | null
           right_value?: number | null
@@ -77,6 +83,7 @@ export interface Database {
         Row: {
           created_at: string | null
           creator: string | null
+          deckcount: number
           gamefields: string[]
           id: number
           init: Json
@@ -88,6 +95,7 @@ export interface Database {
         Insert: {
           created_at?: string | null
           creator?: string | null
+          deckcount?: number
           gamefields?: string[]
           id?: number
           init: Json
@@ -99,6 +107,7 @@ export interface Database {
         Update: {
           created_at?: string | null
           creator?: string | null
+          deckcount?: number
           gamefields?: string[]
           id?: number
           init?: Json
@@ -159,12 +168,36 @@ export interface Database {
           top?: Json
         }
       }
+      leaderboard: {
+        Row: {
+          game_id: number | null
+          id: number
+          name: string
+          user_id: string | null
+          wins: number
+        }
+        Insert: {
+          game_id?: number | null
+          id?: number
+          name?: string
+          user_id?: string | null
+          wins?: number
+        }
+        Update: {
+          game_id?: number | null
+          id?: number
+          name?: string
+          user_id?: string | null
+          wins?: number
+        }
+      }
       rules: {
         Row: {
           action_id: number | null
           created_at: string | null
           exclusive: number | null
           id: number
+          left: string | null
           left_field: number | null
           left_player: number | null
           left_value: number | null
@@ -172,6 +205,7 @@ export interface Database {
           operator: string
           or_bool: boolean
           required: boolean
+          right: string | null
           right_field: number | null
           right_player: number | null
           right_value: number | null
@@ -181,6 +215,7 @@ export interface Database {
           created_at?: string | null
           exclusive?: number | null
           id?: number
+          left?: string | null
           left_field?: number | null
           left_player?: number | null
           left_value?: number | null
@@ -188,6 +223,7 @@ export interface Database {
           operator?: string
           or_bool?: boolean
           required?: boolean
+          right?: string | null
           right_field?: number | null
           right_player?: number | null
           right_value?: number | null
@@ -197,6 +233,7 @@ export interface Database {
           created_at?: string | null
           exclusive?: number | null
           id?: number
+          left?: string | null
           left_field?: number | null
           left_player?: number | null
           left_value?: number | null
@@ -204,6 +241,7 @@ export interface Database {
           operator?: string
           or_bool?: boolean
           required?: boolean
+          right?: string | null
           right_field?: number | null
           right_player?: number | null
           right_value?: number | null
@@ -215,6 +253,7 @@ export interface Database {
           game: number | null
           id: number
           owner: string
+          public: boolean
           started: boolean
           table: Json | null
         }
@@ -223,6 +262,7 @@ export interface Database {
           game?: number | null
           id?: number
           owner?: string
+          public?: boolean
           started?: boolean
           table?: Json | null
         }
@@ -231,6 +271,7 @@ export interface Database {
           game?: number | null
           id?: number
           owner?: string
+          public?: boolean
           started?: boolean
           table?: Json | null
         }
