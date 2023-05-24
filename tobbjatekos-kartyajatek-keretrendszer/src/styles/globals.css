@@ -5,14 +5,14 @@
 body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  height: -webkit-fill-available;
   height: 100%;
+  height: -webkit-fill-available;
 }
 html {
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  height: -webkit-fill-available;
   height: 100%;
+  height: -webkit-fill-available;
 }
 
 body > div:first-child,
@@ -20,9 +20,11 @@ body > div:first-child,
       div#__next > div {
         min-height: 100vh;
         min-height: -webkit-fill-available;
-        height: -webkit-fill-available;
         height: 100%;
+        height: -webkit-fill-available;
       }
+
+
 
 /* 
 :root {
