@@ -5,7 +5,7 @@ export default function Reactions({reactionQueue, selfReact}: {reactionQueue: {n
     
 
     return(
-        <div className="absolute left-1/2 bottom-4 -translate-x-1/2 flex gap-2 text-2xl cursor-pointer select-none z-20">
+        <div className="absolute left-1/2 bottom-4 -translate-x-1/2 flex gap-2 text-2xl cursor-pointer select-none pointer-events-auto z-20">
             <div className="animate-wiggle opacity-20 hover:opacity-100 transition-all duration-500 active:scale-150 active:duration-0" onClick={()=>selfReact('&#129315;')}>&#129315;</div>
             <div className="opacity-20 hover:opacity-100 transition-all duration-500 active:scale-150 active:duration-0" onClick={()=>selfReact('&#128578;') } >&#128578;</div>
             <div className="opacity-20 hover:opacity-100 transition-all duration-500 active:scale-150 active:duration-0" onClick={()=>selfReact('&#129299;') }  >&#129299;</div>
