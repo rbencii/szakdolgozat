@@ -529,7 +529,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                 </div>
 
-                <div onClick={() => { setDark(!dark) }} className="w-[40vh] w-[40svh] h-[min(10vh,10vw)] h-[min(10svh,10vw)] sm:h-[10vh] sm:h-[10svh]">
+                <div onClick={() => { setDark(!dark) }} className="w-[40svh] w-[40vh] h-[min(10vh,10vw)] h-[min(10svh,10vw)] sm:h-[10vh] sm:h-[10svh]">
                     <Hand dark={dark} idxs={fieldOrders?.gamefields} hand={room.view?.table as any} />
                 </div>
 
