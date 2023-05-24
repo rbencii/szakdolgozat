@@ -25,7 +25,7 @@ export default function NewGame() {
 
 
     return (
-        <main className="w-screen h-screen flex flex-col items-center bg-[#e0e0e0]">
+        <main className="w-screen h-screen h-[100svh] flex flex-col items-center bg-[#e0e0e0]">
             <form onSubmit={handleButton}>
             <div className="flex flex-col gap-4 items-start">
 
