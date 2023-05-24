@@ -514,7 +514,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                         <div key={player.id} className={"flex-col relative p-6 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
                             
                             <div className="dark:text-slate-300">{player?.name}</div>
-                            <div className="w-[25vh] h-[16vh] rotate-180">
+                            <div className="w-[25vh] w-[25svh] h-[16vh] h-[16svh] rotate-180">
                                 {/* <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons' && (player.hand['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop')))} hand={{ top: player.hand as any }} /> */}
                                 {/* <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons')} hand={{ top: player.hand as any }} /> */}
                              
@@ -529,7 +529,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                 </div>
 
-                <div onClick={() => { setDark(!dark) }} className="w-[40vh] h-[min(10vh,10vw)] sm:h-[10vh]">
+                <div onClick={() => { setDark(!dark) }} className="w-[40vh] w-[40svg] h-[min(10vh,10vw)] h-[min(10svh,10vw)] sm:h-[10vh] sm:h-[10svh]">
                     <Hand dark={dark} idxs={fieldOrders?.gamefields} hand={room.view?.table as any} />
                 </div>
 
@@ -543,13 +543,13 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                     } */}
                     
                     {fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(0,1).map((field, i) =>
-                    <div key={i} className="w-[min(60vh,80vw)] h-[min(25vw,20vh)] sm:h-[20vh]">
+                    <div key={i} className="w-[min(60vh,80vw)] w-[min(60svh,80vw)] h-[min(25vw,20vh)] h-[min(25vw,20svh)] sm:h-[20vh] sm:h-[20svh]">
                     <Hand dark={dark} idxs={[field]} hand={room.view?.hand} />
                     </div>
                     )}
                   
                     {Object.keys(room?.view?.hand?.top).length>1 &&
-                    <div className="w-[min(50vh,70vw)] h-[min(24vw,18vh)] sm:h-[18vh]">
+                    <div className="w-[min(50vh,70vw)] w-[min(50svh,70vw)] h-[min(24vw,18vh)] h-[min(24vw,18svh)] sm:h-[18vh] sm:h-[18svh]">
                         {
                             // '+handtop'
                             // '+handbottom'
@@ -568,7 +568,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                         }
                     </div>}
-                    <div className="w-[min(50vh,90vw)] h-[min(30vw,10vh)] sm:h-[7vh]">
+                    <div className="w-[min(50vh,90vw)] w-[min(50svh,90vw)] h-[min(30vw,10vh)] h-[min(30vw,10svh)] sm:h-[7vh] sm:h-[7svh]">
                         <Hand dark={dark} heightPc={50} idxs={fieldOrders?.playerfields?.filter(x => x == '+buttons')} hand={room.view?.hand} />
                     </div>
                 </div>
