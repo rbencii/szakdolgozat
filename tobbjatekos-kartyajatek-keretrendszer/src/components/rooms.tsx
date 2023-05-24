@@ -687,62 +687,62 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
         
 
     //IN ROOM NOT STARTED
-    if (room)
-        return (
-            <>
-                <div className="flex gap-2 justify-center items-center">
-                    <div>
-                        Room - {room.id}
-                    </div>
-                    <div>
-                        Name:
-                        <input className="border-2 ml-2" type="text" name="name" id="name" onInput={changeName} />
-                    </div>
-                </div>
-                <div className="flex flex-col justify-center items-center mt-4">
-                    Players:
-                    <ul>
-                        {room.players.map((player, i) => {
-                            return (
-                                <li key={i}>
-                                    {player.name} - {player.id}
-                                </li>
-                            )
-                        })
-                        }
-                    </ul>
+    // if (room)
+    //     return (
+    //         <>
+    //             <div className="flex gap-2 justify-center items-center">
+    //                 <div>
+    //                     Room - {room.id}
+    //                 </div>
+    //                 <div>
+    //                     Name:
+    //                     <input className="border-2 ml-2" type="text" name="name" id="name" onInput={changeName} />
+    //                 </div>
+    //             </div>
+    //             <div className="flex flex-col justify-center items-center mt-4">
+    //                 Players:
+    //                 <ul>
+    //                     {room.players.map((player, i) => {
+    //                         return (
+    //                             <li key={i}>
+    //                                 {player.name} - {player.id}
+    //                             </li>
+    //                         )
+    //                     })
+    //                     }
+    //                 </ul>
 
-                    <button onClick={makePublic}>
-                        Make Public
-                    </button>
+    //                 <button onClick={makePublic}>
+    //                     Make Public
+    //                 </button>
 
-                    <button onClick={deleteRoom}>
-                        Delete room
-                    </button>
+    //                 <button onClick={deleteRoom}>
+    //                     Delete room
+    //                 </button>
 
-                    <button onClick={leaveRoom}>
-                        Leave room
-                    </button>
+    //                 <button onClick={leaveRoom}>
+    //                     Leave room
+    //                 </button>
 
-                    <select name="games" id="games" onChange={setGame} defaultValue={""}>
-                        <option value="" disabled>Select Game</option>
-                        {
-                            games.map((game) => {
-                                return (
-                                    <option key={game.id} value={game.id}>{game.name}</option>
-                                )
-                            })
-                        }
-                    </select>
+    //                 <select name="games" id="games" onChange={setGame} defaultValue={""}>
+    //                     <option value="" disabled>Select Game</option>
+    //                     {
+    //                         games.map((game) => {
+    //                             return (
+    //                                 <option key={game.id} value={game.id}>{game.name}</option>
+    //                             )
+    //                         })
+    //                     }
+    //                 </select>
 
-                    <button onClick={generateTable}>
-                        Start Game
-                    </button>
+    //                 <button onClick={generateTable}>
+    //                     Start Game
+    //                 </button>
 
-                    {room?.id!=null && room?.game_id!=null && <Leaderboard room_id={room?.id} game_id={room?.game_id} ></Leaderboard>}
-                </div>
-            </>
-        )
+    //                 {room?.id!=null && room?.game_id!=null && <Leaderboard room_id={room?.id} game_id={room?.game_id} ></Leaderboard>}
+    //             </div>
+    //         </>
+    //     )
 
 
     //NOT IN ROOM
