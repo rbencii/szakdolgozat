@@ -513,7 +513,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                         // <div key={player.id} className="scale-75 flex flex-col items-center" style={{ borderColor: room.view?.table?.current === player.id ? 'lime' : '' }}>
                         <div key={player.id} className={"flex-col first:ml-auto last:mr-auto relative p-4 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
                             
-                            <div className="dark:text-slate-300">{player?.name}</div>
+                            <div className="dark:text-slate-300">{player?.name} ({Object.entries(player.hand)?.filter(x=>x?.includes('+buttons')==false)?.map(x=>x?.slice(-1)?.[0]).reduce((p,c)=>p+(c as any)?.length??0,0) as number})</div>
                             {
                             fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>player?.hand?.[x]?.length!=0).slice(0,2).reverse().map((field,i) =>
                             <div key={i} className="w-[min(25vh,25svh)] w-[min(25vh,25svh,60vw)] h-[min(9vh,9svh)] h-[min(9vh,9svh)]">
@@ -538,7 +538,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                 <div className="my-auto flex flex-col">
                     {
                     fieldOrders?.gamefields?.filter((x: any)=>room.view?.table?.top?.[x]?.length>0)?.map((field, i) =>
-                    <div key={i} onClick={() => { setDark(!dark) }} className="w-[min(29vh,29svh,700vw)] min-h-[min(10vh,10svh)] h-[min(10vh,10svh)]">
+                    <div key={i} className="w-[min(29vh,29svh,700vw)] min-h-[min(10vh,10svh)] h-[min(10vh,10svh)]">
                     <Hand keepright={true} dark={dark} idxs={[field]} hand={room.view?.table as any} />
                     </div>)
                     }
@@ -596,6 +596,10 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                 <MenuButton text='Delete' />
                 </button>
                 }
+
+                <button className="absolute -left-4 top-0.5 scale-50" onClick={() => { setDark(!dark) }}>
+                <MenuButton text='Dark Mode' />
+                </button>
             </div>
         )
 
