@@ -36,42 +36,6 @@ export default function Chat({chat, sendMessage}: {chat: {name: string, text: st
   <input value={input} onInput={(e: any)=>handleInput(e)} onKeyUp={(e:any)=>send(e)} className="absolute w-full left-0 rounded-b-xl px-2 h-6" type="text" name="" id="" />
   </div>
 </div>
-<style>
-    {
-        `
-
-        details[open] {
-            margin-bottom: 1.5rem !important;
-        }
-
-        .scroller {
-            overflow: auto;
-            height: 30vh;
-            display: flex;
-            flex-direction: column-reverse;
-            word-break: break-all;
-            width: 90vw;
-            }
-            
-            .scroller .scroller-content .item {
-              transform: translateZ(0); /* fixes a bug in Safari iOS where the scroller doesn't update */
-              width: 90vw;
-              word-break: break-all;
-            }
-
-            @media only screen and (min-width: 768px) {
-                .scroller {
-                    height: 30vh;
-                    width: 30vw;
-                    }
-                    
-                    .scroller .scroller-content .item {
-                      width: 30vw;
-                    }
-            }
-        `
-    }
-</style>
 </details>
 </div>
     )

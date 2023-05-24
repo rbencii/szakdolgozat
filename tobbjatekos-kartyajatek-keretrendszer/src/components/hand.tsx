@@ -1,6 +1,6 @@
 import Card from "@/components/card";
 import Card2 from "./card2";
-import { Fragment } from "react";
+import { Fragment, use, useEffect, useRef } from "react";
 
 export interface CardData {
     suit: string,
@@ -8,7 +8,10 @@ export interface CardData {
     sorter: number
 }
 
-export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark }: { hand: { top: any }, idxs: string[] | null | undefined, cols?: number, heightPc?: number, gap?: number, dark?: boolean }) {
+export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, keepright }: { hand: { top: any }, idxs: string[] | null | undefined, cols?: number, heightPc?: number, gap?: number, dark?: boolean, keepright?: boolean }) {
+
+    const overflowing = useRef<any>();
+    const canClick = useRef<boolean>(true);
 
     if (!indexes)
         return (<div>loading</div>)
@@ -34,6 +37,11 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark }:
     }
 
     const place = async (h: string, i: number) => {
+        if (canClick.current == false)
+            return;
+
+        canClick.current = false;
+        console.log('Started placing.');
         const options: RequestInit = {
             method: 'POST',
             headers: {
@@ -43,6 +51,9 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark }:
         };
         const resp = await fetch('api/room/place', options);
         const obj = await resp.json();
+        if(obj){
+            canClick.current = true;
+        }
         console.log(obj);
     }
 
@@ -55,14 +66,20 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark }:
     // idxs.splice(1,10);
     // top[idxs[0]]=top[idxs[0]].slice(0,1);
 
+    if(keepright)
+    useEffect(() => {
+        console.log('rerender');
+        overflowing.current.scrollLeft = overflowing.current.scrollWidth;
+    }, [top])
+
 
 
     return (
-        <div className="flex flex-col w-full h-full">
+        <div className="flex relative flex-col w-full h-full">
             {
-                idxs.map((idx) => <div key={idx} style={{zIndex: `${idxs.length-idxs.indexOf(idx)}`, gap: `${gap??2}%`}} className="flex w-full h-full justify-center">
+                idxs.filter((x: any)=>top?.[x]!=null && top?.[x]?.length>0 ).map((idx) => <div key={idx} style={{ gap: `${gap??2}%`}} ref={overflowing} className="flex w-full min-h-[calc(100%+2rem)] pt-[1rem] -mb-[1rem] relative -top-[1rem] hand overflow-x-auto">
                     {top[idx].map((card: CardData, i: number) =>
-                        <div className="h-0" key={i} style={{width: `${100/(cols??5)}%`}} onClick={() => place(idx, i)}>
+                        <div className="h-0 first:ml-auto last:mr-auto" key={i} style={{minWidth: `${100/(cols??5)}%`}} onClick={() => place(idx, i)}>
                             <div style={{paddingTop: `${heightPc??160}%`}} className="relative flex w-full">
                                 <div className="w-full h-full absolute left-0 top-0">
                                     <Card2 dark={dark} card={card} />

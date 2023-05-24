@@ -190,7 +190,7 @@ export default function Editor() {
             </div>
             {games.game &&
                 games.loadedgame?.games_rules?.map((rule: {rules: Ruletype}, i: number)=>{
-                    return <div className="flex overflow-auto max-w-screen w-full lg:justify-center" key={i}>
+                    return <div className="flex overflow-auto max-w-screen w-full" key={i}>
                     <Rule playerfields={games.loadedgame?.playerfields} gamefields={games.loadedgame?.gamefields} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
                     </div>
                 })

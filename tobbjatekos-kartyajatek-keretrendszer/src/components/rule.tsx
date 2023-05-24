@@ -528,7 +528,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
     }
 
     return (
-        <form onSubmit={(e) => handleSubmit(e)}>
+        <form className="ml-auto mr-auto" onSubmit={(e) => handleSubmit(e)}>
             <div className="flex flex-col items-center justify-center border" style={(!required ?? true) ? { borderColor: 'rgb(129 140 248)' } : { borderColor: 'rgb(251 191 36)' }}>
                 <div>{or_bool ? 'OR' : 'AND'}
                     <input type="checkbox" name="or_bool" id="or_bool" onChange={handleCheckbox} checked={or_bool} />

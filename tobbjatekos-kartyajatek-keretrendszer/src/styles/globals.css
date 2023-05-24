@@ -13,6 +13,7 @@ html {
   min-height: -webkit-fill-available;
   height: -webkit-fill-available;
   height: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body > div:first-child,
@@ -23,6 +24,78 @@ body > div:first-child,
         height: -webkit-fill-available;
         height: 100%;
       }
+
+
+      details[open] {
+        margin-bottom: 1.5rem !important;
+    }
+
+    .scroller {
+        overflow: auto;
+        height: 30vh;
+        display: flex;
+        flex-direction: column-reverse;
+        word-break: break-all;
+        width: calc(100vw - 3rem);
+        }
+        
+        .scroller .scroller-content .item {
+          transform: translateZ(0); /* fixes a bug in Safari iOS where the scroller doesn't update */
+          width: calc(100vw - 3rem);
+          word-break: break-all;
+        }
+
+        @media only screen and (min-width: 768px) {
+            .scroller {
+                height: 30vh;
+                width: 30vw;
+                }
+                
+                .scroller .scroller-content .item {
+                  width: 30vw;
+                }
+        }
+
+
+        ::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        
+        ::-webkit-scrollbar-button {
+          width: 0px;
+          height: 0px;
+        }
+        
+        /* Track */
+        ::-webkit-scrollbar-track {
+          background: #5757573d;
+          border-radius: 0px;
+        }
+        
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+          background: #7474748f;
+          border-radius: 0px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: #838383;
+        }
+        
+        ::-webkit-scrollbar-corner {
+          background: #5757573d;
+        }
+
+
+.hand::-webkit-scrollbar {
+  display: none;
+}
+
+.hand {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
+}
 
 /* 
 :root {
