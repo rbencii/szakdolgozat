@@ -17,7 +17,7 @@ export default function Play() {
                 <meta name="description" content="Többjátékos kártyajáték keretrendszer" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
             </Head>
-            <main className='w-screen h-screen h-[100svh] bg-[#e0e0e0]'>
+            <main className='w-screen h-screen bg-[#e0e0e0]' style={{height: '100svh'}}>
                 <Rooms supabase={supabase} session={session} />
             </main>
         </>
