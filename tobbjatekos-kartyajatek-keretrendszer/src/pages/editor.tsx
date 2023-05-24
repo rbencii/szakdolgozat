@@ -110,7 +110,7 @@ export default function Editor() {
     if(!supabase) return; 
 
     return (
-        <main className="absolute left-1/2 -translate-x-1/2 top-0">
+        <main>
         <div className="w-full h-full flex flex-col items-center gap-y-16 my-32">
             <a href="/newgame">
                 New Game
@@ -190,7 +190,9 @@ export default function Editor() {
             </div>
             {games.game &&
                 games.loadedgame?.games_rules?.map((rule: {rules: Ruletype}, i: number)=>{
-                    return <Rule playerfields={games.loadedgame?.playerfields} gamefields={games.loadedgame?.gamefields} key={i} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
+                    return <div className="flex overflow-auto max-w-screen w-full lg:justify-center" key={i}>
+                    <Rule playerfields={games.loadedgame?.playerfields} gamefields={games.loadedgame?.gamefields} duplicate={duplicateRule} game_id={games.game as number} rules={rule.rules}/>
+                    </div>
                 })
             }
             {games.game && <button onClick={()=>newRule()}> add new rule</button>}

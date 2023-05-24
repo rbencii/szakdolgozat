@@ -43,7 +43,7 @@ let { data: spme } = await supabaseServerClient
 .select("id")
 .eq('user_id', user.id).single()
 
-const resp = {you:spme?.id ,id:data?.id ,players: names, started: false}
+const resp = {you:spme?.id ,id:data?.id ,players: names, started: false, owner: true}
 
   res.status(200).json({ resp, error })
 }

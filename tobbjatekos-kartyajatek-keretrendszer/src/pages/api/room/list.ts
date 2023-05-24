@@ -23,7 +23,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     name
   )
   `)
-  .eq('public',true);
+  .eq('public',true).eq('started',false);
 
     const list = data?.map(x=>String(x.id)+' - '+((x.session_players as any[]).find(y=>y.user_id==x.owner))?.name??'Unnamed')??[]
     res.status(200).json({ list });

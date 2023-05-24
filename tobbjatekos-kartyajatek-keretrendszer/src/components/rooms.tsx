@@ -7,14 +7,16 @@ import { createSolutionBuilderWithWatchHost } from "typescript";
 import Chat from "./chat";
 import Leaderboard from "./leaderboard";
 import Reactions from "./reactions";
+import MenuButton from "./menubutton";
 
 export default function Rooms({ supabase, session }: { supabase: SupabaseClient<any, "public", any>, session: Session | null }) {
-    const [room, setRoom] = useState<null | { you: number, id: number, game_id: number|null, view?: { hand: any, table: { current: number, dir: number, next: number, top: { draw: boolean, tablecount: number, table: any } | any } }, players: { id: number, name: string, hand: any }[], started: boolean }>(null);
+    const [room, setRoom] = useState<null | { owner: boolean|null, you: number, id: number, game_id: number|null, view?: { hand: any, table: { current: number, dir: number, next: number, top: { draw: boolean, tablecount: number, table: any } | any } }, players: { id: number, name: string, hand: any, wins: number|null }[], started: boolean }>(null);
     const [sub, setSub] = useState<null | RealtimeChannel>(null);
     const [games, setGames] = useState<{ id: number, name: string }[]>([]);
     const [debugHand, setDebugHand] = useState<any>(null);
     const [fieldOrders, setFieldOrders] = useState<{ playerfields: string[], gamefields: string[] } | null>(null);
     const [dark, setDark] = useState<boolean>(false);
+    const [publicMode, setPublicMode] = useState<boolean>(false);
 
     const [roomList, setRoomList] = useState<string[]>([])
 
@@ -25,6 +27,9 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
     const [reactionQueue, setReactionQueue] = useState<{name: string, emoji: string}[]>([]);
     const clearReactions = useRef<any>(null);
+
+    const players  =  useRef<any>(room?.players);
+    players.current = room?.players;
 
     const addReaction = (name: string, emoji: string) => {
         setReactionQueue((prev)=>{return [...prev, {name, emoji}]});
@@ -273,7 +278,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                             console.log('insert')
                             setRoom((prev) => {
                                 if (prev) {
-                                    let players = [...prev.players, { id, name, hand: null }];
+                                    let players = [...prev.players, { id, name, hand: null, wins: null }];
                                     players.sort();
                                     return {
                                         ...prev,
@@ -316,7 +321,8 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                                                 return {
                                                     id,
                                                     name,
-                                                    hand
+                                                    hand,
+                                                    wins: player?.wins
                                                 }
                                             }
                                             return player;
@@ -332,8 +338,9 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                     'postgres_changes',
                     { event: 'UPDATE', schema: 'public', table: 'session', filter: `id=eq.${room.id}` },
                     (payload) => {
-                        const { started } = payload?.new;
+                        const { started, public: pb } = payload?.new;
                         console.log('session', payload);
+                        setPublicMode(pb??false);
                         setRoom((prev) => {
                             if (prev) {
                                 return {
@@ -415,7 +422,8 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                     })
                     .on('broadcast', {event: 'text'}, (payload) => {
                         const key=Number(Object.keys(payload?.payload)?.[0]);
-                        const player=room?.players?.find((player)=>player.id==key);
+                        const player=players.current?.find((player:any)=>player.id==key);
+                        console.log(key,player,players.current?.players)
                         if(key!=undefined && player!=undefined)
                         setChat((prev)=>{
                             return [...prev, {name: player?.name, text: String(Object.values(payload?.payload)?.[0])}]
@@ -485,7 +493,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
     //IN ROOM STARTED
     if (room?.started)
         return (
-            <div  className={"flex flex-col gap-2 flex-wrap items-center justify-between w-full h-full "+(dark?'dark':'')} style={!dark ? { backgroundColor: '#e0e0e0' } : { backgroundColor: '#121212' }}>
+            <div  className={"flex flex-col flex-wrap items-center justify-between w-full h-full "+(dark?'dark':'')} style={!dark ? { backgroundColor: '#e0e0e0' } : { backgroundColor: '#121212' }}>
 
                 {/* <div className="flex flex-wrap justify-between">
                 {room.players.filter(player => player.id !== room?.you).map((player) =>
@@ -499,15 +507,19 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
 
 
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-4 items-center max-w-screen overflow-y-auto">
 
                     {room.players.filter(player => player.id !== room?.you).map((player) =>
                         // <div key={player.id} className="scale-75 flex flex-col items-center" style={{ borderColor: room.view?.table?.current === player.id ? 'lime' : '' }}>
                         <div key={player.id} className={"flex-col relative p-6 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
                             
                             <div className="dark:text-slate-300">{player?.name}</div>
-                            <div className="w-[12rem] h-32 rotate-180">
-                                <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons' && (player.hand['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop')))} hand={{ top: player.hand as any }} />
+                            <div className="w-[25vh] h-[16vh] rotate-180">
+                                {/* <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons' && (player.hand['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop')))} hand={{ top: player.hand as any }} /> */}
+                                {/* <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons')} hand={{ top: player.hand as any }} /> */}
+                             
+                                <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>player?.hand?.[x]?.length!=0).slice(0,2)} hand={{top: player.hand}} />
+                               
                             </div>
                             {messages?.[player.id] && <div className="w-[12rem] absolute overflow-scroll" style={{wordBreak: 'break-all', maxHeight: '4rem'}}>{messages[player.id]}</div>}
                         </div>
@@ -517,36 +529,58 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                 </div>
 
-                <div onClick={() => { setDark(!dark) }} className="w-[20rem] h-20">
+                <div onClick={() => { setDark(!dark) }} className="w-[40vh] h-[min(10vh,10vw)] sm:h-[10vh]">
                     <Hand dark={dark} idxs={fieldOrders?.gamefields} hand={room.view?.table as any} />
                 </div>
 
-                <div className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-8 rounded-md "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
-                    {fieldOrders?.playerfields?.[0] &&
+                <div className={"flex flex-col items-center justify-between [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] p-2 pt-6 md:p-8 rounded-md "+((room.view?.table?.current === room?.you)?`${dark?'dark':''}turn`:'')} >
+                    {/* {fieldOrders?.playerfields?.[0] &&
                         <div className="w-[30.8rem] h-40">
 
                             <Hand dark={dark} idxs={[fieldOrders.playerfields[0]]} hand={room.view?.hand} />
 
                         </div>
-                    }
-                    <div className="w-[26rem] h-36">
+                    } */}
+                    
+                    {fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(0,1).map((field, i) =>
+                    <div key={i} className="w-[min(60vh,80vw)] h-[min(25vw,20vh)] sm:h-[20vh]">
+                    <Hand dark={dark} idxs={[field]} hand={room.view?.hand} />
+                    </div>
+                    )}
+                  
+                    {Object.keys(room?.view?.hand?.top).length>1 &&
+                    <div className="w-[min(50vh,70vw)] h-[min(24vw,18vh)] sm:h-[18vh]">
                         {
                             // '+handtop'
                             // '+handbottom'
-                            fieldOrders?.playerfields?.slice(1, -1)?.filter(x => x != '+buttons' && (room.view?.hand?.top['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop'))).map((field, i) =>
+                            // fieldOrders?.playerfields?.slice(1, -1)?.filter(x => x != '+buttons' && (room.view?.hand?.top['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop'))).map((field, i) =>
+
+                            //     <Hand dark={dark} key={i} idxs={[field]} hand={room.view?.hand} />
+
+                            // )
+                           
+
+                            fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(1,2).map((field, i) =>
 
                                 <Hand dark={dark} key={i} idxs={[field]} hand={room.view?.hand} />
 
                             )
 
                         }
-                    </div>
-                    <div className="w-[25rem] h-16">
+                    </div>}
+                    <div className="w-[min(50vh,90vw)] h-[min(30vw,10vh)] sm:h-[7vh]">
                         <Hand dark={dark} heightPc={50} idxs={fieldOrders?.playerfields?.filter(x => x == '+buttons')} hand={room.view?.hand} />
                     </div>
                 </div>
                 <Reactions reactionQueue={reactionQueue} selfReact={(emoji:string)=>sendReaction(emoji)}></Reactions>
                 <Chat chat={chat}  sendMessage={sendMessage}></Chat>
+
+                {
+                room?.owner &&
+                <button onClick={deleteRoom} className="w-20 h-10 absolute left-2 bottom-2 scale-75">
+                <MenuButton text='Delete' />
+                </button>
+                }
             </div>
         )
 
@@ -593,6 +627,64 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
     //             </button>
     //         </div>
     //     )
+
+    if (room)
+        return (
+            <div className="w-full h-full flex items-center justify-center text-blue-950 px-6">
+
+            <div className="w-full h-full max-w-2xl max-h-96 grid grid-cols-2 md:grid-cols-4 md:grid-rows-3 gap-6">
+            <div className="row-span-2 col-span-2 w-full h-full flex flex-col">
+            <div className="text-xl">Room - {room.id} {publicMode && '(Public)'}</div>
+                <div className="flex flex-col text-sm items-center justify-start row-span-2 w-full h-full text-blue-950 overflow-y-auto border-2 rounded-md border-white/80 bg-cyan-50/60 p-2">
+                    {
+                        room.players.map((player,i)=><div key={i}>{player.name}#{player.id} {player?.wins && <span className="bg-white border-2 border-amber-200 rounded-full p-0.5 px-1.5">{player.wins}&#127942;</span>}</div>)
+                    }
+                </div>
+            </div>
+                <div className="w-full h-full col-span-2 flex flex-col">
+                    <div className="text-xl">Name</div>
+                    <input placeholder={'New Player'} type="text"  name="name" id="name" onInput={changeName} className="rounded-xl px-2 h-full w-full text-center placeholder:text-blue-950/60 text-blue-950 border-2 border-white/80 bg-gray-100 bg-[linear-gradient(90deg,rgba(165,243,252,0.2)_0%,rgba(251,207,232,0.2)_100%)]" />
+                </div>
+
+                {room?.owner && <div className="w-full h-full col-span-2 flex flex-col">
+                    <div className="text-xl">Select Game</div>
+                
+                    <select name="games" id="games" onChange={setGame} defaultValue={""} className="px-2 h-full w-full text-center placeholder:text-blue-950/60 text-blue-950 border-2 border-white/80 bg-gray-100 bg-[linear-gradient(90deg,rgba(165,243,252,0.2)_0%,rgba(251,207,232,0.2)_100%)]">
+                        <option value="" disabled>Select Game</option>
+                        {
+                            games.map((game) => {
+                                return (
+                                    <option key={game.id} value={game.id}>{game.name}</option>
+                                )
+                            })
+                        }
+                    </select>
+                </div>}
+
+                {
+                room?.owner?
+                <button onClick={deleteRoom} className="w-full h-full md:h-1/2">
+                <MenuButton text='Delete' />
+                </button>
+                :
+                <button onClick={leaveRoom} className="w-full h-full col-span-2">
+                <MenuButton text='Leave' />
+                </button>
+                }
+
+                {room?.owner && <button onClick={makePublic} className="w-full h-full md:h-1/2" style={{pointerEvents: publicMode?'none':'auto'}}>
+                <MenuButton text='Make Public' />
+                </button>}
+
+                {room?.owner && <button onClick={generateTable} className="w-full h-full md:h-1/2 col-span-2">
+                <MenuButton text='Start Game' />
+                </button>}
+
+            </div>
+
+            </div>
+        )
+        
 
     //IN ROOM NOT STARTED
     if (room)
@@ -655,24 +747,36 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
     //NOT IN ROOM
     return (
-        <div className="w-full h-full flex flex-col items-center justify-start py-8">
-
-            <div className="mb-16 max-h-[12rem] overflow-y-auto">
-            {
-                roomList.map(x=><div key={x}>{x}</div>)
-            }
+        <form onSubmit={handleSubmit} className="w-full h-full flex flex-col items-center justify-center gap-6 p-8">
             
-            </div>
-            <form className="flex flex-col items-center justify-center" onSubmit={handleSubmit}>
-                <input type="text" name="session" id="session" className="border-2 border-black" />
-                <button type="submit">
-                    Join Session
-                </button>
-            </form>
+                <a href="/" className="w-20 opacity-50 absolute left-4 top-4"> 
+                <MenuButton text=
+                {'<<<'} />
+                </a>
 
-            <button onClick={newRoom}>
-                Create Session
-            </button>
-        </div>
+                <input placeholder={'Enter code'} type="text" name="session" id="session" className="rounded-xl px-2 w-full max-w-[10rem] text-center placeholder:text-blue-950/60 text-blue-950 border-2 border-white/80 bg-gray-100 bg-[linear-gradient(90deg,rgba(165,243,252,0.2)_0%,rgba(251,207,232,0.2)_100%)]" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 h-full w-full max-w-[48rem] max-h-64 gap-4">
+
+                <button type="submit" className="w-full h-full">
+                    <MenuButton text='Join Session' />
+                </button>
+
+                <div className="flex flex-col order-last text-sm md:order-none items-center justify-start row-span-2 h-full text-blue-950 overflow-y-auto border-2 rounded-md border-white/20 bg-pink-100/50 p-2">
+                <div className="text-lg mb-2 sticky top-0 backdrop-blur-[1px]">Public Rooms</div>
+                {
+                    roomList.map(x=><div key={x}>{x}</div>)
+                }
+                </div>
+
+                <button onClick={newRoom} className="w-full h-full">
+                <MenuButton text='Create Session' />
+                </button>
+
+                
+                </div>
+
+                
+        </form>
     )
 }

@@ -30,7 +30,7 @@ const { session_id:id, id: spid } = data;
 
 let { data: names, error } = await supabaseServerClient
 .from('session_players')
-.select(`id,name,hand,
+.select(`id,name, user_id, hand,
 handview(
   top
 )
@@ -41,6 +41,7 @@ let { data: session, error: error3 } = await supabaseServerClient
 .from('session')
 .select(`started,
 game,
+owner,
 tableview(
   top,
   current,
@@ -51,9 +52,22 @@ tableview(
 
 const { started, game } = session as any;
 
+  if(game!=null && names!=null){
+    let { data: data2, error: error2 } = await supabaseServerClient
+    .from('leaderboard')
+    .select("user_id, wins")
+    .eq('game_id', game);
+
+    names?.forEach((element: any) => {
+      element['wins']=((data2 as any).find((x: any) => x.user_id==element.user_id) as any)?.['wins']??null;
+  });
+
+}
+
+
 names?.sort((a,b) => a.id - b.id);
 
-  const resp = {you:spid, id:id, game_id: game ,players: names?.map(x=>(x as any)={id:x?.id, name: x?.name, hand: x?.hand}), started, view:{hand:names?.find(x=>x?.id===spid)?.handview, table:session?.tableview}}
+  const resp = {you:spid, id:id, game_id: game ,players: names?.map(x=>(x as any)={id:x?.id, name: x?.name, wins: (x as any)?.wins??null, hand: x?.hand}), started, view:{hand:names?.find(x=>x?.id===spid)?.handview, table:session?.tableview}, owner: session?.owner==user.id}
 
   res.status(200).json({ resp, error, error2 })
 }
