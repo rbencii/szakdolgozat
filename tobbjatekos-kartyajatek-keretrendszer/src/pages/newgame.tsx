@@ -1,7 +1,9 @@
-import { FormEvent } from "react";
+import { useRouter } from "next/router";
+import { FormEvent, useEffect } from "react";
 
 export default function NewGame() {
 
+    const router = useRouter();
 
     const handleButton = async (e: any) => {
         e.preventDefault();
@@ -20,7 +22,10 @@ export default function NewGame() {
         let resp = await fetch(`api/game/newgame`, options);
         let obj = await resp.json();
         console.log(obj)
-
+        if(obj)
+        {
+            router.push('/editor')
+        }
     }
 
 
