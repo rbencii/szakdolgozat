@@ -26,21 +26,21 @@ export default function Chainer({ rules, games_id, newChain, refresh }: { rules:
     return (
         <form onSubmit={(e)=>handleSubmit(e)}>
         <div className="flex flex-col gap-2 items-center justify-center">
-            <h1>New Chain <span onClick={()=>refresh()}>R</span></h1>
+            <h1>New Chain <span className="cursor-pointer border p-0.5" onClick={()=>refresh()}>Refresh</span></h1>
             <div className="flex flex-row gap-2 items-center justify-center">
-                <select name="chain_start" id="chain_start" defaultValue={""}>
+                <select className="border p-0.5" name="chain_start" id="chain_start" defaultValue={""}>
                     <option value="">Start</option>
                     {rules.map((rule, i)=>{return <option key={i} value={rule.id}>{rule.name}</option>})}
                     
                 </select>
 
-                <select name="chain_end" id="chain_end" defaultValue={""}>
+                <select className="border p-0.5" name="chain_end" id="chain_end" defaultValue={""}>
                     <option value="">End</option>
                     {rules.map((rule, i)=>{return <option key={i} value={rule.id}>{rule.name}</option>})}
                 </select>
             </div>
             <input type="checkbox" name="or_bool" id="or_bool" /> OR_BOOL
-            <button type="submit"> add chain</button>
+            <button className="border p-0.5" type="submit"> add chain</button>
         </div>
         </form>
     )

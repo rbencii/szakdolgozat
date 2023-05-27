@@ -533,8 +533,8 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                 <div>{or_bool ? 'OR' : 'AND'}
                     <input type="checkbox" name="or_bool" id="or_bool" onChange={handleCheckbox} checked={or_bool} />
                 </div>
-                <input className="text-center" type="text" id="id" onChange={handleInput} value={id} />
-                <input className="text-center" type="text" id="name" onChange={handleInput} value={name ?? ''} />
+                <input className="text-center border" type="text" id="id" onChange={handleInput} value={id} />
+                <input className="text-center border" type="text" id="name" onChange={handleInput} value={name ?? ''} />
                 <div>{required ? 'required' : 'effect'}
                     <input type="checkbox" name="required" id="required" onChange={handleCheckbox} checked={required} />
                 </div>
@@ -840,9 +840,9 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
 
 
             </div>
-            <button type="submit">save</button>
-            <div className="cursor-pointer flex w-fit" onClick={() => duplicate(rulesState)}>duplicate</div>
-            <div className="cursor-pointer flex w-fit" onClick={() => removeRule()}>remove</div>
+            <button className="border p-0.5" type="submit">save</button>
+            <div className="cursor-pointer flex w-fit border p-0.5" onClick={() => duplicate(rulesState)}>duplicate</div>
+            <div className="cursor-pointer flex w-fit border p-0.5" onClick={() => removeRule()}>remove</div>
         </form>
     )
 }

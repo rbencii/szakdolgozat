@@ -112,10 +112,10 @@ export default function Editor() {
     return (
         <main>
         <div className="w-full h-full flex flex-col items-center gap-y-16 my-32">
-            <a href="/newgame">
+            <a className="border p-0.5" href="/newgame">
                 New Game
             </a>
-            <select name="games" id="games" onChange={setGame} value={games.game??""}>
+            <select className="border" name="games" id="games" onChange={setGame} value={games.game??""}>
                 <option value="" disabled>Select Game</option>
                 {
                     games.games?.map((game)=>{
@@ -125,7 +125,7 @@ export default function Editor() {
                     })
                 }
             </select>
-            <button onClick={copyGame}>
+            <button className="border p-0.5" onClick={copyGame}>
                 Copy Game
             </button>
             { games.game && games.loadedgame?.games_rules &&
@@ -140,7 +140,7 @@ export default function Editor() {
                             let rules = games.loadedgame?.games_rules?.filter((rule: any)=>ids.includes(rule.rules.id)&&rule.rules.required);
 
                             return (
-                                <div onClick={()=>deleteChain(chain.id)} key={i}>
+                                <div key={i}>
                                     <div>{chain.or_bool?'OR':'AND'} ({chain.id})</div>
                                     {rules?.map((rule: any, i: number)=>{
                                         return (
@@ -150,6 +150,7 @@ export default function Editor() {
                                             </span>
                                         )
                                     })}
+                                    <span onClick={()=>deleteChain(chain.id)} className="border p-0.5 cursor-pointer">X</span>
                                 </div>
                             )
 
