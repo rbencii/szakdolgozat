@@ -778,7 +778,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                 <div className="grid grid-cols-1 md:grid-cols-2 h-full w-full max-w-[48rem] max-h-64 gap-4">
 
                 <button type="submit" className="w-full h-full">
-                    <MenuButton text='Join Session' />
+                    <MenuButton text='Join Room' />
                 </button>
 
                 <div className="flex flex-col order-last text-sm md:order-none items-center justify-start row-span-2 h-full text-blue-950 overflow-y-auto border-2 rounded-md border-white/20 bg-pink-100/50 p-2">
@@ -789,7 +789,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                 </div>
 
                 <button onClick={newRoom} className="w-full h-full">
-                <MenuButton text='Create Session' />
+                <MenuButton text='Create Room' />
                 </button>
 
                 
