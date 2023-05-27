@@ -73,8 +73,8 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
 
     useEffect(() => {
         const horizontalScroll = (e: any) => {
-            console.log(e.deltaX, e.deltaY);
-            if(e.deltaX != 0) return;
+           let touchscreen = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+            if(e.deltaX != 0 || touchscreen) return;
             e.preventDefault();
             if(e.deltaY > 0) overflowing.current.scrollLeft += 3;
             else overflowing.current.scrollLeft -= 3;
