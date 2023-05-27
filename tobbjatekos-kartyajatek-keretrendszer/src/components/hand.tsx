@@ -12,9 +12,7 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
 
     const overflowing = useRef<any>();
     const canClick = useRef<boolean>(true);
-
-    if (!indexes)
-        return (<div>loading</div>)
+    const eventListenerSet = useRef<boolean>(false);
 
     //let idxs = Object.keys(hand.top);
     let top = { ...hand.top };
@@ -31,7 +29,8 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
     }
 
 
-    const idxs = indexes.length == 0 ? Object.keys(top) : indexes;
+    const idxs = indexes?.length == 0 ? Object.keys(top) : indexes;
+    if(idxs)
     for (let idx of idxs) {
         top[idx].sort((a: CardData, b: CardData) => a.sorter - b.sorter);
     }
@@ -66,18 +65,39 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
     // idxs.splice(1,10);
     // top[idxs[0]]=top[idxs[0]].slice(0,1);
 
-    if(keepright)
     useEffect(() => {
         console.log('rerender');
+        if(overflowing.current && keepright)
         overflowing.current.scrollLeft = overflowing.current.scrollWidth;
     }, [top])
 
+    useEffect(() => {
+        const horizontalScroll = (e: any) => {
+            console.log(e.deltaX, e.deltaY);
+            if(e.deltaX != 0) return;
+            e.preventDefault();
+            if(e.deltaY > 0) overflowing.current.scrollLeft += 3;
+            else overflowing.current.scrollLeft -= 3;
+        }
+        if(overflowing.current && !eventListenerSet.current){
+        eventListenerSet.current = true;
+        overflowing.current.addEventListener('wheel', horizontalScroll);
+        }
+        return()=>{
+            eventListenerSet.current = false;
+            if(overflowing.current)
+            overflowing.current.removeEventListener('wheel', horizontalScroll);
+        }
+    }, [])
+
+    if (!indexes && idxs==null)
+        return (<div>loading</div>)
 
 
     return (
         <div className="flex relative flex-col w-full h-full">
             {
-                idxs.filter((x: any)=>top?.[x]!=null && top?.[x]?.length>0 ).map((idx) => <div key={idx} style={{ gap: `${gap??2}%`}} ref={overflowing} className="flex w-full min-h-[calc(100%+2rem)] pt-[1rem] -mb-[1rem] relative -top-[1rem] hand overflow-x-auto">
+                idxs?.filter((x: any)=>top?.[x]!=null && top?.[x]?.length>0 ).map((idx) => <div key={idx} style={{ gap: `${gap??2}%`}} ref={overflowing} className="flex w-full min-h-[calc(100%+2rem)] pt-[1rem] -mb-[1rem] relative -top-[1rem] hand overflow-x-auto">
                     {top[idx].map((card: CardData, i: number) =>
                         <div className="h-0 first:ml-auto last:mr-auto" key={i} style={{minWidth: `${100/(cols??5)}%`}} onClick={() => place(idx, i)}>
                             <div style={{paddingTop: `${heightPc??160}%`}} className="relative flex w-full">
@@ -91,24 +111,5 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
 
             }
         </div>
-    )
-
-    return (
-        <>
-            {draw && tablecount && <div className="flex gap-2.5">{tablecount}<Card card={{ suit: 'hidden', value: 'hidden' } as any} /></div>}
-            {idxs.map((idx) =>
-                <div className="flex flex-wrap gap-6 my-2 relative" style={isTable ? { transform: 'translateX(-50%)', left: '1rem' } : {}} key={idx}>
-
-                    {top[idx].map((card: CardData, i: number) =>
-                        <div key={i} onClick={() => place(idx, i)}>
-                            {/* <Card2 style={isTable?{opacity: `${70-(((top[idx].length-2)-i)*20)}%`}:{}} card={card}/> */}
-                            <div className="w-24 h-36 block">
-                                <Card2 card={card} />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-        </>
     )
 }
