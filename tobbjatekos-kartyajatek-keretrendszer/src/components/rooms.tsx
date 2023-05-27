@@ -20,8 +20,8 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
     const [roomList, setRoomList] = useState<string[]>([])
 
-    const [messages, setMessages] = useState<{ [key: number]: string }>({});
-    const [chat, setChat] = useState<{name: string, text: string}[]>([]);
+    //const [messages, setMessages] = useState<{ [key: number]: string }>({});
+    const [chat, setChat] = useState<{name: string, text: string}[]>(JSON.parse(sessionStorage.getItem('chat')||'[]'));
     const refreshRoomList = useRef<any>(null);
 
 
@@ -68,7 +68,11 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                 payload: { [Number(room?.you)]: msg },
             })
             const name = room?.players.find(p=>p.id===Number(room?.you))?.name;
-            setChat([...chat, {name: name||"unknown", text: msg}]);
+            //setChat([...chat, {name: name||"unknown", text: msg}]);
+            setChat((prev)=>{
+                sessionStorage.setItem('chat', JSON.stringify([...prev, {name: name||"unknown", text: msg}]));
+                return [...prev, {name: name||"unknown", text: msg}];
+            });
         }
     }
 
@@ -165,6 +169,8 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
         const resp = await fetch('api/room/delete');
         const obj = await resp.json();
         console.log(obj);
+        sessionStorage.removeItem('chat');
+        setChat([]);
         setRoom(null);
         supabase.removeAllChannels();
         setSub(null);
@@ -426,13 +432,14 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                         console.log(key,player,players.current?.players)
                         if(key!=undefined && player!=undefined)
                         setChat((prev)=>{
-                            return [...prev, {name: player?.name, text: String(Object.values(payload?.payload)?.[0])}]
+                            sessionStorage.setItem('chat',JSON.stringify([...prev, {name: player?.name, text: String(Object.values(payload?.payload)?.[0])}]));
+                            return [...prev, {name: player?.name, text: String(Object.values(payload?.payload)?.[0])}];
                         })
-                        setMessages((prev)=>{
-                            return {...prev, ...payload?.payload}
-                        }
-                        )
-                        console.log(messages)
+                        // setMessages((prev)=>{
+                        //     return {...prev, ...payload?.payload}
+                        // }
+                        // )
+                        // console.log(messages)
                     })
                     .on('broadcast', {event: 'reaction'}, (payload) => {
                         const {name, emoji} = payload?.payload;
@@ -464,6 +471,8 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
         }
         else if (room && sub && room.players.length === 0) {
             if(room?.started==false){
+            sessionStorage.removeItem('chat');
+            setChat([]);
             setRoom(null);
             setFieldOrders(null);
             supabase.removeAllChannels();
@@ -472,7 +481,9 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
             else
             setTimeout(
                 () => {
-                    setRoom(null);
+                sessionStorage.removeItem('chat');
+                setChat([]);
+                setRoom(null);
                 setFieldOrders(null);
                 supabase.removeAllChannels();
                 setSub(null);
