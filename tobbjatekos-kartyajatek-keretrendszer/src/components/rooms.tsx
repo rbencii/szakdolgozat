@@ -524,9 +524,9 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                         // <div key={player.id} className="scale-75 flex flex-col items-center" style={{ borderColor: room.view?.table?.current === player.id ? 'lime' : '' }}>
                         <div key={player.id} className={"flex-col first:ml-auto last:mr-auto relative p-4 [&.darkturn]:shadow-[inset_1px_1px_16px_#21232b_,_inset_-1px_-1px_15px_#0c0c0c] [&.turn]:shadow-[inset_5px_5px_16px_#a4a4a4_,_inset_-12px_-12px_15px_#ffffff] rounded-xl "+((room.view?.table?.current === player?.id)?`${dark?'dark':''}turn`:'')}>
                             
-                            <div className="dark:text-slate-300">{player?.name} ({Object.entries(player.hand)?.filter(x=>x?.includes('+buttons')==false)?.map(x=>x?.slice(-1)?.[0]).reduce((p,c)=>p+(c as any)?.length??0,0) as number})</div>
+                            <div className="dark:text-slate-300">{player?.name} ({Object.entries(player.hand)?.filter(x=>x?.includes('buttons')==false)?.map(x=>x?.slice(-1)?.[0]).reduce((p,c)=>p+(c as any)?.length??0,0) as number})</div>
                             {
-                            fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>player?.hand?.[x]?.length!=0).slice(0,2).reverse().map((field,i) =>
+                            fieldOrders?.playerfields?.filter(x => !x?.includes('buttons')).filter(x=>player?.hand?.[x]?.length!=0).slice(0,2).reverse().map((field,i) =>
                             <div key={i} className="w-[min(25vh,25svh)] w-[min(25vh,25svh,60vw)] h-[min(9vh,9svh)] h-[min(9vh,9svh)]">
                                 {/* <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons' && (player.hand['+handtop'].length > 0 ? (x != '-handbottom') : (x != '+handtop')))} hand={{ top: player.hand as any }} /> */}
                                 {/* <Hand dark={dark} idxs={fieldOrders?.playerfields?.filter(x => x != '+buttons')} hand={{ top: player.hand as any }} /> */}
@@ -566,7 +566,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                         </div>
                     } */}
                     
-                    {fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(0,1).map((field, i) =>
+                    {fieldOrders?.playerfields?.filter(x => !x?.includes('buttons')).filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(0,1).map((field, i) =>
                     <div key={i} className="w-[min(52vh,52svh,80vw)] h-[min(18vh,18svh,28vw)]">
                     <Hand dark={dark} idxs={[field]} hand={room.view?.hand} />
                     </div>
@@ -584,7 +584,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                             // )
                            
 
-                            fieldOrders?.playerfields?.filter(x => x != '+buttons').filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(1,2).map((field, i) =>
+                            fieldOrders?.playerfields?.filter(x => !x?.includes('buttons')).filter(x=>room.view?.hand?.top?.[x]?.length!=0).slice(1,2).map((field, i) =>
 
                                 <Hand dark={dark} key={i} idxs={[field]} hand={room.view?.hand} />
 
@@ -593,7 +593,7 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
                         }
                     </div>}
                     <div className="w-[min(50vh,50svh,80vw)] h-[min(7vh,7svh,11vw)]">
-                        <Hand dark={dark} heightPc={50} idxs={fieldOrders?.playerfields?.filter(x => x == '+buttons')} hand={room.view?.hand} />
+                        <Hand dark={dark} heightPc={50} idxs={fieldOrders?.playerfields?.filter(x => x?.includes('buttons'))} hand={room.view?.hand} />
                     </div>
                 </div>
                 <div className="absolute w-full h-full top-0 left-0 overflow-hidden pointer-events-none select-none">

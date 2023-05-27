@@ -99,12 +99,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             if(init.playerfields[idx]?.length == undefined){
             hand[idx] = cards.splice(0, init.playerfields[idx]);
             top[idx] = idx[0]==='-'?Array(init.playerfields[idx]).fill({value:'hidden', suit:'hidden'}):hand[idx];
-            outer[idx] = idx==='+hand'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
+            outer[idx] = idx[0]!=='+'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
+            console.log(idx, idx[0]!=='+');
             }
             else{
               hand[idx] = init.playerfields[idx];
               top[idx] = idx[0]==='-'?Array(init.playerfields[idx].length).fill({value:'hidden', suit:'hidden'}):hand[idx];
-              outer[idx] = idx==='+hand'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
+              outer[idx] = idx[0]!=='+'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
             }
             
         }

@@ -363,7 +363,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     for (let field of playerfields) {
         const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
         topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
-        outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
+        outerview[field] = outerview[field].map((card: CardData) => field[0] !== '+' || field[0] === '-' ? hidden : card);
 
     }
     await service.from('handview')
@@ -1224,7 +1224,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     for (let field of playerfields) {
                         const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
                         topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
-                        outerview[field] = outerview[field].map((card: CardData) => field === '+hand' || field[0] === '-' ? hidden : card);
+                        outerview[field] = outerview[field].map((card: CardData) => field[0] !== '+' || field[0] === '-' ? hidden : card);
 
                     }
                     await service.from('handview')

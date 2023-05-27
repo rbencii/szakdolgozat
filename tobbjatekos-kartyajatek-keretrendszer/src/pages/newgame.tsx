@@ -70,7 +70,7 @@ export default function NewGame() {
 
                         <div className="flex flex-col">
                             Playerfields
-                            <textarea name="playerfields" id="playerfields" cols={30} rows={4} defaultValue={'["+hand","+buttons"]'}></textarea>
+                            <textarea name="playerfields" id="playerfields" cols={30} rows={4} defaultValue={'["hand","+buttons"]'}></textarea>
                         </div>
                     </div>
                     <div className="flex h-full flex-col">
@@ -82,7 +82,7 @@ export default function NewGame() {
     "-variable": 0
   },
   "playerfields": {
-    "+hand": 5,
+    "hand": 5,
     "+buttons": [
       {
         "suit": "Pick up",
