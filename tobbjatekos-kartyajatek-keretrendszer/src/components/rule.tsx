@@ -35,6 +35,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                 left_field=0; 
                 left_player=0;
                 left_value=null;
+            break;
             case 'next': //playerfield index
                 left_field=null; 
                 left_player=null;

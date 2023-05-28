@@ -196,7 +196,7 @@ export default function Editor() {
                     </div>
                 })
             }
-            {games.game && <button onClick={()=>newRule()}> add new rule</button>}
+            {games.game && <button className="mb-16" onClick={()=>newRule()}> add new rule</button>}
         </div>
 
        

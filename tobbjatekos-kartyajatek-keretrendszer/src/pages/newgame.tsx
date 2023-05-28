@@ -11,6 +11,9 @@ export default function NewGame() {
         [...e.target.elements].forEach((x:any)=>body[x.name as any]=x.value);
         console.log(body)
 
+        if(!body?.gamefields?.includes('"table"'))
+        return;
+
         const options: RequestInit = {
             method: 'POST',
             headers: {
