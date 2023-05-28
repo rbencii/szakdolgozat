@@ -155,9 +155,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       
     }
 
-    top['table'] = table['table'].slice(-1);
+    //top['table'] = table['table'].slice(-1);
     sorter+=1;
-    top['table'][0].sorter = sorter;
+    //top['table'][0].sorter = sorter;
     top['draw'] = true;
     top['tablecount'] = table['table'].length;
 

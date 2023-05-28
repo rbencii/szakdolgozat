@@ -592,9 +592,9 @@ export default function Rooms({ supabase, session }: { supabase: SupabaseClient<
 
                         }
                     </div>}
-                    <div className="w-[min(50vh,50svh,80vw)] h-[min(7vh,7svh,11vw)]">
+                    {fieldOrders?.playerfields?.filter(x => x?.includes('buttons'))?.length !==0 && <div className="w-[min(50vh,50svh,80vw)] h-[min(7vh,7svh,11vw)]">
                         <Hand dark={dark} heightPc={50} idxs={fieldOrders?.playerfields?.filter(x => x?.includes('buttons'))} hand={room.view?.hand} />
-                    </div>
+                    </div>}
                 </div>
                 <div className="absolute w-full h-full top-0 left-0 overflow-hidden pointer-events-none select-none">
                 <Reactions reactionQueue={reactionQueue} selfReact={(emoji:string)=>sendReaction(emoji)}></Reactions>

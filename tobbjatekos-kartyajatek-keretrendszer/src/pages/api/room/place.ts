@@ -217,7 +217,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         let ids = rangeArr(chain.chain_start, chain.chain_end);
         if(outercnt>0)
         localplayable = playable;
-        let chaingroup = rules.filter((rule: any) => ids.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
+        let chaingroup = rules.filter((rule: any) => ids?.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
         if (chain.or_bool && playable && !broken) {
             console.log("break")
             //break;
@@ -497,7 +497,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
     let left: any, right: any;
     let tableAbove, rtable;
     //get table
-    if ((left_player != null && left_player != 0 && leftSwitch.includes('gf'))) {
+    if ((left_player != null && left_player != 0 && leftSwitch?.includes('gf'))) {
         const { data: tabledata } = await service
             .from('tables')
             .select(`
@@ -516,7 +516,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
     else
         tableAbove = table;
 
-    if ((right_player != null && right_player != 0 && rightSwitch.includes('gf'))) {
+    if ((right_player != null && right_player != 0 && rightSwitch?.includes('gf'))) {
         const { data: tabledata } = await service
             .from('tables')
             .select(`
@@ -539,7 +539,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
     let hand = null;
     let rhand = null;
 
-    if (left_player !== 0 && left_player != null && leftSwitch.includes('pf')) {
+    if (left_player !== 0 && left_player != null && leftSwitch?.includes('pf')) {
 
         const { data: data4 } = await service
             .from('hands')
@@ -554,7 +554,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
     else
         hand = handRef;
 
-    if (right_player !== 0 && right_player != null && rightSwitch.includes('pf')) {
+    if (right_player !== 0 && right_player != null && rightSwitch?.includes('pf')) {
 
         const { data: data4 } = await service
             .from('hands')
@@ -885,7 +885,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                 doAction = prevDoAction;
             }
 
-        // if (rule?.rules?.name.includes('top'))
+        // if (rule?.rules?.name?.includes('top'))
         // console.log(rule?.rules?.name,': ',left, operator, right)
         // console.log('doaction', doAction);
         console.log('                                                                                 left',left)
@@ -900,7 +900,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
 
             let tableAbove, rtable;
             //get table
-            if ((left_player != null && left_player != 0 && leftSw.includes('gf'))) {
+            if ((left_player != null && left_player != 0 && leftSw?.includes('gf'))) {
                 const { data: tabledata } = await service
                     .from('tables')
                     .select(`
@@ -919,7 +919,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
             else
                 tableAbove = table;
 
-            if ((right_player != null && right_player != 0 && rightSw.includes('gf'))) {
+            if ((right_player != null && right_player != 0 && rightSw?.includes('gf'))) {
                 const { data: tabledata } = await service
                     .from('tables')
                     .select(`
@@ -948,7 +948,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
             let hand = null;
             let rhand = null;
 
-            if (left_player !== 0 && left_player != null && leftSw.includes('pf')) {
+            if (left_player !== 0 && left_player != null && leftSw?.includes('pf')) {
 
                 const { data: data4 } = await service
                     .from('hands')
@@ -963,7 +963,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
             else
                 hand = handRef;
 
-            if (right_player !== 0 && right_player != null && rightSw.includes('pf')) {
+            if (right_player !== 0 && right_player != null && rightSw?.includes('pf')) {
 
                 const { data: data4 } = await service
                     .from('hands')
@@ -1190,8 +1190,8 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
 
             if (update) {
 
-                if ((left_player != null && left_player !== 0 && leftSw.includes('gf')) || (right_player != null && right_player !== 0 && rightSw.includes('gf'))) {
-                    const tbl2 = (leftSw.includes('gf') && left_player !== 0) ? tableAbove : rtable;
+                if ((left_player != null && left_player !== 0 && leftSw?.includes('gf')) || (right_player != null && right_player !== 0 && rightSw?.includes('gf'))) {
+                    const tbl2 = (leftSw?.includes('gf') && left_player !== 0) ? tableAbove : rtable;
                     await service
                         .from('tables')
                         .update({ table: tbl2 })
@@ -1208,14 +1208,14 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
 
 
                 //left or right is distant playerfield something
-                if ((leftSw.includes('pf') && left_player !== 0 && left_player != null) || (rightSw.includes('pf') && right_player !== 0 && right_player != null)) {
+                if ((leftSw?.includes('pf') && left_player !== 0 && left_player != null) || (rightSw?.includes('pf') && right_player !== 0 && right_player != null)) {
 
-                    const hnd = (leftSw.includes('pf') && left_player !== 0) ? hand : rhand;
+                    const hnd = (leftSw?.includes('pf') && left_player !== 0) ? hand : rhand;
 
                     const { data: newdata } = await service
                         .from('hands')
                         .update({ hand: hnd })
-                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + ((leftSw.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);//.select().single();
+                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + ((leftSw?.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);//.select().single();
 
                     //const { hand: newhand } = newdata as any;
 
@@ -1229,11 +1229,11 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     }
                     await service.from('handview')
                         .update({ top: topview })
-                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + ((leftSw.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);
+                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + ((leftSw?.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);
 
                     await service.from('session_players')
                         .update({ hand: outerview })
-                        .eq('id', spids[(spids.indexOf(session_players_id) + ((leftSw.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);
+                        .eq('id', spids[(spids.indexOf(session_players_id) + ((leftSw?.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);
 
 
 

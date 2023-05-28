@@ -40,7 +40,7 @@ let { data, error } = await supabaseServerClient
     .eq('id', game).single();
 
     if(error2){
-        res.status(424).json({fields:[], error })
+        res.status(424).json({fields:[], error2 })
         return;
     }
 

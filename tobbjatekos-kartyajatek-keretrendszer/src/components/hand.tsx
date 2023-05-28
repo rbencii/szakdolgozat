@@ -32,6 +32,7 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
     const idxs = indexes?.length == 0 ? Object.keys(top) : indexes;
     if(idxs)
     for (let idx of idxs) {
+        if(top[idx] != null && top[idx]?.length && top[idx]?.length>0)
         top[idx].sort((a: CardData, b: CardData) => a.sorter - b.sorter);
     }
 

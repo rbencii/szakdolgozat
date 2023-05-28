@@ -173,10 +173,10 @@ create table
     constraint handview_session_players_id_fkey foreign key (session_players_id) references session_players (id) on delete cascade
   ) tablespace pg_default;
 
-CREATE POLICY "Read official and own" ON "public"."games"
+CREATE POLICY "Read access for authenticated users" ON "public"."games"
 AS PERMISSIVE FOR SELECT
 TO authenticated
-USING (((creator = auth.uid()) OR (official = true)));
+USING (true);
 
 CREATE POLICY "Enable insert for authenticated users" ON "public"."games"
 AS PERMISSIVE FOR INSERT
