@@ -1,4 +1,3 @@
-import Card from "@/components/card";
 import Card2 from "./card2";
 import { Fragment, use, useEffect, useRef } from "react";
 

@@ -4,7 +4,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Database } from '../../../assets/supabase'
 import { createClient } from '@supabase/supabase-js'
 
-
+//Fisher Yates modern algoritmus https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
 function shuffle(arr: any[]) {
     let i = arr.length, j, temp;
     while(--i > 0){
@@ -68,7 +68,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return;
     }
    
-    const values = [ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", ];
+    const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
     const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
     const cards:{value:string, suit:string, sorter: number}[] = [];
     
@@ -77,7 +77,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const value = values[v];
         const suit = suits[s];
 
-        for(let deckcounter=0;deckcounter<deckcount;deckcounter++)
+        for(let deckcounter=0; deckcounter < deckcount; deckcounter++)
         cards.push({ value, suit, sorter: 0 });
       }
     }

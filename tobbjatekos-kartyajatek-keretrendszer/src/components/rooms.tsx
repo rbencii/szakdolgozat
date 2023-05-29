@@ -2,10 +2,8 @@ import { RealtimeChannel, Session, SupabaseClient } from "@supabase/supabase-js"
 import { SourceMap } from "module";
 import { Fragment, useEffect, useRef, useState } from "react";
 import Hand from '@/components/hand'
-import MouseLayer from "./mouseLayer";
 import { createSolutionBuilderWithWatchHost } from "typescript";
 import Chat from "./chat";
-import Leaderboard from "./leaderboard";
 import Reactions from "./reactions";
 import MenuButton from "./menubutton";
 
