@@ -1,3 +1,4 @@
+import MenuButton from "@/components/menubutton";
 import Rooms from "@/components/rooms";
 import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 import Head from "next/head";
@@ -7,7 +8,13 @@ export default function Play() {
     const supabase = useSupabaseClient();
     const session = useSession();
 
-    if(!session) return;
+    if(!session) return (
+        <div className='w-full h-full p-8 flex flex-col items-center justify-center'>
+            <a href="/" className="w-[40vw] h-[30vh]">
+            <MenuButton text='Log in' />
+            </a>
+        </div>
+    );
     if(!supabase) return;   
 
     return (
