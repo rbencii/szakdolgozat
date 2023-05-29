@@ -13,7 +13,6 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
     const canClick = useRef<boolean>(true);
     const eventListenerSet = useRef<boolean>(false);
 
-    //let idxs = Object.keys(hand.top);
     let top = { ...hand.top };
     let draw = false;
     let tablecount = top?.tablecount;
@@ -26,7 +25,6 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
         delete top.draw;
         isTable = true;
     }
-
 
     const idxs = indexes?.length == 0 ? Object.keys(top) : indexes;
     if(idxs)
@@ -56,17 +54,7 @@ export default function Hand({ hand, idxs: indexes, cols, heightPc, gap, dark, k
         console.log(obj);
     }
 
-    //console.log(top?.['-variable']);
-    //if(top?.['-variable']!==undefined)
-    //return (<div>{top?.['-variable'][0].value}</div>)
-
-
-
-    // idxs.splice(1,10);
-    // top[idxs[0]]=top[idxs[0]].slice(0,1);
-
     useEffect(() => {
-        console.log('rerender');
         if(overflowing.current && keepright)
         overflowing.current.scrollLeft = overflowing.current.scrollWidth;
     }, [top])

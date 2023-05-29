@@ -1,4 +1,4 @@
-// Creating a new supabase server client object (e.g. in API route):
+
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Database } from '../../../assets/supabase'
@@ -55,7 +55,6 @@ let action_id:any=null;
     .update(actions)
     .eq('id', actions.id).select().single();
 
-    console.log('bejon', actions2)
     if(error || actions2===null){
         res.status(500).json({ error })
         return;

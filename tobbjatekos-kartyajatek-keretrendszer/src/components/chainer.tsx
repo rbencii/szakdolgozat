@@ -6,7 +6,6 @@ export default function Chainer({ rules, games_id, newChain, refresh }: { rules:
     const handleSubmit = async (e:any) => {
         e.preventDefault();
         const { chain_start, chain_end, or_bool } = e.target.elements;
-        console.log(chain_start.value, chain_end.value, or_bool.checked)
             const options: RequestInit = {
             method: 'POST',
             headers: {

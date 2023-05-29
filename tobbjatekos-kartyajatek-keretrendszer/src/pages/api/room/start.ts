@@ -1,4 +1,4 @@
-// Creating a new supabase server client object (e.g. in API route):
+
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Database } from '../../../assets/supabase'
@@ -100,7 +100,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             hand[idx] = cards.splice(0, init.playerfields[idx]);
             top[idx] = idx[0]==='-'?Array(init.playerfields[idx]).fill({value:'hidden', suit:'hidden'}):hand[idx];
             outer[idx] = idx[0]!=='+'?Array(top[idx].length).fill({value:'hidden', suit:'hidden'}):top[idx];
-            console.log(idx, idx[0]!=='+');
             }
             else{
               hand[idx] = init.playerfields[idx];
@@ -122,8 +121,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     .from('session_players')
     .update({ hand: outer })
     .eq('id', spID);
-
-    //console.log(top)
 
     const { error: handerror2 } = await service
     .from('handview')
@@ -155,9 +152,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       
     }
 
-    //top['table'] = table['table'].slice(-1);
     sorter+=1;
-    //top['table'][0].sorter = sorter;
+
     top['draw'] = true;
     top['tablecount'] = table['table'].length;
 

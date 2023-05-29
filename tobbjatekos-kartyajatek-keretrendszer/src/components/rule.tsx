@@ -23,34 +23,30 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
 
     let { id, required, operator, left_field, right_field, left_player, right_player, right_value, left_value, actions, or_bool, name, exclusive, left, right } = rulesState;
 
-    useEffect(() => {
-        console.log(rulesState);
-    }, [rulesState])
-
     const handleLSelect = (e: any) => {
         const value = e.target.value;
 
         switch (value) {
             case 'pfi': //playerfield index
-                left_field=0; 
-                left_player=0;
-                left_value=null;
-            break;
+                left_field = 0;
+                left_player = 0;
+                left_value = null;
+                break;
             case 'next': //playerfield index
-                left_field=null; 
-                left_player=null;
-                left_value=null;
-            break;
+                left_field = null;
+                left_player = null;
+                left_value = null;
+                break;
             case 'gfi': //gamefield index
-                left_field=0; 
-                left_player=0;
-                left_value=null;
-            break;
+                left_field = 0;
+                left_player = 0;
+                left_value = null;
+                break;
             case 'cardidx': //placed card index
-            left_field=null; 
-            left_player=0;
-            left_value=null;
-            break;
+                left_field = null;
+                left_player = 0;
+                left_value = null;
+                break;
             case 'cv': //placed card value
                 left_field = null;
                 left_value = null;
@@ -131,7 +127,6 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
 
 
         setRulesState((prev) => ({ ...prev, left_field, left_value, left_player, left: value }));
-        // setLast('left');
     }
 
     const handleRSelect = (e: any) => {
@@ -139,20 +134,20 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
 
         switch (value) {
             case 'pfi': //playerfield index
-                right_field=0; 
-                right_player=0;
-                right_value=null;
-            break;
+                right_field = 0;
+                right_player = 0;
+                right_value = null;
+                break;
             case 'gfi': //gamefield index
-                right_field=0; 
-                right_player=0;
-                right_value=null;
-            break;
+                right_field = 0;
+                right_player = 0;
+                right_value = null;
+                break;
             case 'cardidx': //placed card index
-                right_field=null; 
-                right_player=0;
-                right_value=null;
-            break;
+                right_field = null;
+                right_player = 0;
+                right_value = null;
+                break;
             case 'cv': //placed card value
                 right_field = null;
                 right_value = null;
@@ -232,7 +227,6 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
         }
 
         setRulesState((prev) => ({ ...prev, right_field, right_value, right_player, right: value }));
-        // setLast('right');
     }
 
     const handleActionLSelect = (e: any) => {
@@ -319,7 +313,6 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
 
 
         setRulesState((prev) => ({ ...prev, actions: { ...prev.actions, left_field: actions.left_field, left_value: actions.left_value, left_player: actions.left_player, left: value } }));
-        // setLast('actions.left');
     }
 
     const handleActionRSelect = (e: any) => {
@@ -405,73 +398,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
         }
 
         setRulesState((prev) => ({ ...prev, actions: { ...prev.actions, right_field: actions.right_field, right_value: actions.right_value, right_player: actions.right_player, right: value } }));
-        // setLast('actions.right');
     }
-
-    // const handleActionSelect = (e: any) => {
-    //     const value = e.target.value;
-
-
-    //     switch (value) {
-    //         case 'fill_l_from_r':
-    //             const initnumber = rightSw.slice(-2)=='gf'?init['gamefields'][gamefields?.[right_field]]:init['playerfields'][playerfields?.[right_field]];
-    //             const start = Math.max(left.length-1,0);
-    //             left?.splice(start, 0, ...right.splice(-1 * Math.max(initnumber - left.length, 0), Math.max(initnumber - left.length, 0)));
-    //             for(let i=start;i<left.length;i++){
-    //                 left[i].sorter=sorter++;
-    //             }
-    //             update = true;
-    //             break;
-    //         case 'move_lv_l_to_r':
-    //             if (leftSw=='cv') {
-    //                 const start = Math.max(right.length-1,0);
-    //                 right.push(hand[handidx]?.splice(cardidx, 1)[0])
-    //                 for(let i=start;i<right.length;i++){
-    //                     right[i].sorter=sorter++;
-    //                 }
-    //                 if(right)
-    //                 update = true;
-    //                 break;
-    //             }
-
-    //             const lv = left_value === -1 ? left.length : left_value;
-    //             const start2 = Math.max(right.length-1,0);
-    //             //console.log(start2);
-    //             right.push(...left.splice(-1 * lv, lv))
-    //             //console.log(right.length-1);
-    //             for(let i=start2;i<right.length;i++){
-    //                 right[i].sorter=sorter++;
-    //             }
-
-    //             update = true;
-
-
-
-    //             break;
-    //         case 'next':
-    //             next = spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
-    //             break;
-    //         case 'setcard':
-    //             left[left_value]={suit:right.slice(right_value)[0]?.suit, value:right.slice(right_value)[0]?.value, sorter:sorter++};
-    //             update = true;
-    //             break;
-    //         case 'setvalue':
-    //             left[left_value]['value']=right;
-    //             update = true;
-    //             break;
-    //         case 'setsuit':
-    //             left[left_value]['suit']=['Diamonds','Hearts','Spades','Clubs'][right%4];
-    //             update = true;
-    //             break;
-    //         case 'dir':
-    //             dir = right;
-    //             break;
-    //     }
-
-
-    //     setRulesState((prev) => ({ ...prev, actions:{...prev.actions, right_field: actions.right_field, right_value: actions.right_value, right_player: actions.right_player, right: value }}));
-    //     // setLast('actions.right');
-    // }
 
     const handleInput = (e: any) => {
         setRulesState((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -502,7 +429,7 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                 }
             }
         }
-        console.log(rulesStateMapped)
+
         const res = await fetch('/api/game/setrules', {
             method: 'POST',
             headers: {
@@ -512,8 +439,8 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
         });
         const data = await res.json();
         if (data.error === null && data.rules !== null)
-            setRulesState((prev) => ({ ...prev, id: data.rules.id, actions: data.rules.action_id?{ ...prev.actions, id: data.rules.action_id }:null }));
-        console.log(data, 'data')
+            setRulesState((prev) => ({ ...prev, id: data.rules.id, actions: data.rules.action_id ? { ...prev.actions, id: data.rules.action_id } : null }));
+        console.log(data)
     }
 
     const removeRule = async () => {
@@ -540,13 +467,13 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                     <input type="checkbox" name="required" id="required" onChange={handleCheckbox} checked={required} />
                 </div>
 
-                { !required && <div>
+                {!required && <div>
                     <select name="exclusive" id="exclusive" className="border text-center" onChange={handleInput} value={exclusive ?? '0'}>
                         <option value="0">ONLY IF NOT FAIL</option>
                         <option value="1">ALWAYS</option>
                     </select>
-                </div>  }
-                
+                </div>}
+
 
                 <div className="flex gap-6">
                     <select name="left" id="left" className="border text-center" onChange={handleLSelect} value={left ?? ''}>
@@ -688,156 +615,156 @@ export default function Rule({ rules, game_id, duplicate, playerfields, gamefiel
                 </div>
                 {actions === null && <button onClick={() => setRulesState((prev) => ({ ...prev, actions: { id: -1 } }))}>add actions</button>}
                 {actions !== null && <>
-    <div className="flex flex items-center justify-center">
-        <input className="border text-center w-8" type="text" id="actions.id" onChange={handleActionInput} value={actions?.id??''} />
-        actions
-    </div>
-    <select name="actions.action_type" id="actions.action_type" className="border text-center" onChange={handleActionInput} value={actions?.action_type ?? ''}>
-        <option value="">ActionType (Reset Chain)</option>
-        <option value="-1">On Fail Do action</option>
-        <option value="0">Always Fail</option>
-        <option value="1">Do action if True Chain</option>
-        <option value="2">(Do action and Don't place card) if True Chain</option>
-    </select>
-    <div className="flex gap-6 mt-2">
+                    <div className="flex flex items-center justify-center">
+                        <input className="border text-center w-8" type="text" id="actions.id" onChange={handleActionInput} value={actions?.id ?? ''} />
+                        actions
+                    </div>
+                    <select name="actions.action_type" id="actions.action_type" className="border text-center" onChange={handleActionInput} value={actions?.action_type ?? ''}>
+                        <option value="">ActionType (Reset Chain)</option>
+                        <option value="-1">On Fail Do action</option>
+                        <option value="0">Always Fail</option>
+                        <option value="1">Do action if True Chain</option>
+                        <option value="2">(Do action and Don't place card) if True Chain</option>
+                    </select>
+                    <div className="flex gap-6 mt-2">
 
-        <select name="actions.left" id="actions.left" className="border text-center" onChange={handleActionInput} value={actions?.left ?? ''}>
-            <option value="">Left operand</option>
-            <option value="cv">Placed card value</option>
-            <option value="cs">Placed card suit</option>
-            <option value="initpf">Init playerfield</option>
-            <option value="initgf">Init gamefield</option>
-            <option value="origin">Card origin index</option>
-            <option value="originpf">Card origin field</option>
-            <option value="pfcv">Playerfield card value</option>
-            <option value="pfcs">Playerfield card suit</option>
-            <option value="pfc">Playerfield cardcount</option>
-            <option value="gfcv">Gamefield card value</option>
-            <option value="gfcs">Gamefield card suit</option>
-            <option value="gfc">Gamefield cardcount</option>
-            <option value="pf">Playerfield</option>
-        <option value="pfi">Playerfield index</option>
-        <option value="gf">Gamefield</option>
-        <option value="gfi">Gamefield index</option>
-        <option value="cardidx">Placed card position</option>
-            <option value="value">Value</option>
-        </select>
+                        <select name="actions.left" id="actions.left" className="border text-center" onChange={handleActionInput} value={actions?.left ?? ''}>
+                            <option value="">Left operand</option>
+                            <option value="cv">Placed card value</option>
+                            <option value="cs">Placed card suit</option>
+                            <option value="initpf">Init playerfield</option>
+                            <option value="initgf">Init gamefield</option>
+                            <option value="origin">Card origin index</option>
+                            <option value="originpf">Card origin field</option>
+                            <option value="pfcv">Playerfield card value</option>
+                            <option value="pfcs">Playerfield card suit</option>
+                            <option value="pfc">Playerfield cardcount</option>
+                            <option value="gfcv">Gamefield card value</option>
+                            <option value="gfcs">Gamefield card suit</option>
+                            <option value="gfc">Gamefield cardcount</option>
+                            <option value="pf">Playerfield</option>
+                            <option value="pfi">Playerfield index</option>
+                            <option value="gf">Gamefield</option>
+                            <option value="gfi">Gamefield index</option>
+                            <option value="cardidx">Placed card position</option>
+                            <option value="value">Value</option>
+                        </select>
 
-        <select name="actions.action" id="actions.action" className="border text-center" onChange={handleActionInput} value={actions?.action ?? ''}>
-            <option value="">Action</option>
-            <option value="fill_l_from_r">Fill Left from Right</option>
-            <option value="move_lv_l_to_r">Move X from Left to Right</option>
-            <option value="next">Next Player</option>
-            <option value="setcard">Set Left Card to Right</option>
-            <option value="setvalue">Set Left Card Value to Right</option>
-            <option value="setsuit">Set Left Card Suit to Right</option>
-            <option value="dir">Set Round Direction to Right</option>
-            <option value="breakchain">Break Chain</option>
-            <option value="continuechain">Continue Chain</option>
-            <option value="win">Winner is Right Value</option>
-        </select>
+                        <select name="actions.action" id="actions.action" className="border text-center" onChange={handleActionInput} value={actions?.action ?? ''}>
+                            <option value="">Action</option>
+                            <option value="fill_l_from_r">Fill Left from Right</option>
+                            <option value="move_lv_l_to_r">Move X from Left to Right</option>
+                            <option value="next">Next Player</option>
+                            <option value="setcard">Set Left Card to Right</option>
+                            <option value="setvalue">Set Left Card Value to Right</option>
+                            <option value="setsuit">Set Left Card Suit to Right</option>
+                            <option value="dir">Set Round Direction to Right</option>
+                            <option value="breakchain">Break Chain</option>
+                            <option value="continuechain">Continue Chain</option>
+                            <option value="win">Winner is Right Value</option>
+                        </select>
 
-        <select name="actions.right" id="actions.right" className="border text-center" onChange={handleActionInput} value={actions?.right ?? ''}>
-            <option value="">Right operand</option>
-            <option value="cv">Placed card value</option>
-            <option value="cs">Placed card suit</option>
-            <option value="initpf">Init playerfield</option>
-            <option value="initgf">Init gamefield</option>
-            <option value="origin">Card origin index</option>
-            <option value="originpf">Card origin field</option>
-            <option value="pfcv">Playerfield card value</option>
-            <option value="pfcs">Playerfield card suit</option>
-            <option value="pfc">Playerfield cardcount</option>
-            <option value="gfcv">Gamefield card value</option>
-            <option value="gfcs">Gamefield card suit</option>
-            <option value="gfc">Gamefield cardcount</option>
-            <option value="pf">Playerfield</option>
-        <option value="pfi">Playerfield index</option>
-        <option value="gf">Gamefield</option>
-        <option value="gfi">Gamefield index</option>
-        <option value="cardidx">Placed card position</option>
-            <option value="value">Value</option>
-        </select>
-    </div>
+                        <select name="actions.right" id="actions.right" className="border text-center" onChange={handleActionInput} value={actions?.right ?? ''}>
+                            <option value="">Right operand</option>
+                            <option value="cv">Placed card value</option>
+                            <option value="cs">Placed card suit</option>
+                            <option value="initpf">Init playerfield</option>
+                            <option value="initgf">Init gamefield</option>
+                            <option value="origin">Card origin index</option>
+                            <option value="originpf">Card origin field</option>
+                            <option value="pfcv">Playerfield card value</option>
+                            <option value="pfcs">Playerfield card suit</option>
+                            <option value="pfc">Playerfield cardcount</option>
+                            <option value="gfcv">Gamefield card value</option>
+                            <option value="gfcs">Gamefield card suit</option>
+                            <option value="gfc">Gamefield cardcount</option>
+                            <option value="pf">Playerfield</option>
+                            <option value="pfi">Playerfield index</option>
+                            <option value="gf">Gamefield</option>
+                            <option value="gfi">Gamefield index</option>
+                            <option value="cardidx">Placed card position</option>
+                            <option value="value">Value</option>
+                        </select>
+                    </div>
 
-    <div className="flex items-center justify-center gap-4">
-
-
-        <div className="flex flex-col items-center justify-center" style={actions?.left_player === null ? { opacity: '20%' } : {}}>
-            {!actions.left?.includes('gf') && <>
-                <div>Left player</div>
-                <input className="text-center border" type="text" id="actions.left_player" onChange={handleActionInput} value={actions?.left_player ?? ''} /></>
-            }
-            {actions.left?.includes('gf') &&
-                <select className="border text-center" name="actions.left_player" id="actions.left_player" onChange={handleActionInput} value={actions?.left_player ?? ''}>
-                    <option value="">from</option>
-                    <option value="0">Tabletop</option>
-                    <option value="1">Deck</option>
-                </select>}
-        </div>
+                    <div className="flex items-center justify-center gap-4">
 
 
-        <div className="flex flex-col items-center justify-center" style={actions?.left_field === null ? { opacity: '20%' } : {}}>
+                        <div className="flex flex-col items-center justify-center" style={actions?.left_player === null ? { opacity: '20%' } : {}}>
+                            {!actions.left?.includes('gf') && <>
+                                <div>Left player</div>
+                                <input className="text-center border" type="text" id="actions.left_player" onChange={handleActionInput} value={actions?.left_player ?? ''} /></>
+                            }
+                            {actions.left?.includes('gf') &&
+                                <select className="border text-center" name="actions.left_player" id="actions.left_player" onChange={handleActionInput} value={actions?.left_player ?? ''}>
+                                    <option value="">from</option>
+                                    <option value="0">Tabletop</option>
+                                    <option value="1">Deck</option>
+                                </select>}
+                        </div>
 
-            <select className="border text-center" name="actions.left_field" id="actions.left_field" onChange={handleActionInput} value={actions?.left_field ?? ''}>
-                <option value="">Left field</option>
-                {actions.left?.includes('gf') && gamefields && gamefields.map((field, index) => {
-                    return <option key={index} value={index}>{field}</option>
-                })
+
+                        <div className="flex flex-col items-center justify-center" style={actions?.left_field === null ? { opacity: '20%' } : {}}>
+
+                            <select className="border text-center" name="actions.left_field" id="actions.left_field" onChange={handleActionInput} value={actions?.left_field ?? ''}>
+                                <option value="">Left field</option>
+                                {actions.left?.includes('gf') && gamefields && gamefields.map((field, index) => {
+                                    return <option key={index} value={index}>{field}</option>
+                                })
+                                }
+                                {actions.left?.includes('pf') && playerfields && playerfields.map((field, index) => {
+                                    return <option key={index} value={index}>{field}</option>
+                                })
+                                }
+                            </select>
+                        </div>
+
+
+                        <div className="flex flex-col items-center justify-center" style={actions?.left_value === null ? { opacity: '20%' } : {}}>
+                            <div>{{ gfcv: 'From top', pfcv: 'Index', gfcs: 'From top', pfcs: 'Index' }[actions.left as string] || 'Left value'}</div>
+                            <input className="text-center border" type="text" id="actions.left_value" onChange={handleActionInput} value={actions?.left_value ?? ''} />
+                        </div>
+
+
+
+                        <div className="flex flex-col items-center justify-center" style={actions?.right_player === null ? { opacity: '20%' } : {}}>
+                            {!actions.right?.includes('gf') && <>
+                                <div>Right player</div>
+                                <input className="text-center border" type="text" id="actions.right_player" onChange={handleActionInput} value={actions?.right_player ?? ''} /></>
+                            }
+                            {actions.right?.includes('gf') &&
+                                <select className="border text-center" name="actions.right_player" id="actions.right_player" onChange={handleActionInput} value={actions?.right_player ?? ''}>
+                                    <option value="">from</option>
+                                    <option value="0">Tabletop</option>
+                                    <option value="1">Deck</option>
+                                </select>}
+                        </div>
+
+
+                        <div className="flex flex-col items-center justify-center" style={actions?.right_field === null ? { opacity: '20%' } : {}}>
+
+                            <select className="border text-center" name="actions.right_field" id="actions.right_field" onChange={handleActionInput} value={actions?.right_field ?? ''}>
+                                <option value="">Right field</option>
+                                {actions.right?.includes('gf') && gamefields && gamefields.map((field, index) => {
+                                    return <option key={index} value={index}>{field}</option>
+                                })
+                                }
+                                {actions.right?.includes('pf') && playerfields && playerfields.map((field, index) => {
+                                    return <option key={index} value={index}>{field}</option>
+                                })
+                                }
+                            </select>
+                        </div>
+
+
+                        <div className="flex flex-col items-center justify-center" style={actions?.right_value === null ? { opacity: '20%' } : {}}>
+                            <div>{{ gfcv: 'From top', pfcv: 'Index', gfcs: 'From top', pfcs: 'Index' }[actions.right as string] || 'Right value'}</div>
+                            <input className="text-center border" type="text" id="actions.right_value" onChange={handleActionInput} value={actions?.right_value ?? ''} />
+                        </div>
+
+                    </div>
+                </>
                 }
-                {actions.left?.includes('pf') && playerfields && playerfields.map((field, index) => {
-                    return <option key={index} value={index}>{field}</option>
-                })
-                }
-            </select>
-        </div>
-
-
-        <div className="flex flex-col items-center justify-center" style={actions?.left_value === null ? { opacity: '20%' } : {}}>
-            <div>{{ gfcv: 'From top', pfcv: 'Index', gfcs: 'From top', pfcs: 'Index' }[actions.left as string] || 'Left value'}</div>
-            <input className="text-center border" type="text" id="actions.left_value" onChange={handleActionInput} value={actions?.left_value ?? ''} />
-        </div>
-
-
-
-        <div className="flex flex-col items-center justify-center" style={actions?.right_player === null ? { opacity: '20%' } : {}}>
-            {!actions.right?.includes('gf') && <>
-                <div>Right player</div>
-                <input className="text-center border" type="text" id="actions.right_player" onChange={handleActionInput} value={actions?.right_player ?? ''} /></>
-            }
-            {actions.right?.includes('gf') &&
-                <select className="border text-center" name="actions.right_player" id="actions.right_player" onChange={handleActionInput} value={actions?.right_player ?? ''}>
-                    <option value="">from</option>
-                    <option value="0">Tabletop</option>
-                    <option value="1">Deck</option>
-                </select>}
-        </div>
-
-
-        <div className="flex flex-col items-center justify-center" style={actions?.right_field === null ? { opacity: '20%' } : {}}>
-
-            <select className="border text-center" name="actions.right_field" id="actions.right_field" onChange={handleActionInput} value={actions?.right_field ?? ''}>
-                <option value="">Right field</option>
-                {actions.right?.includes('gf') && gamefields && gamefields.map((field, index) => {
-                    return <option key={index} value={index}>{field}</option>
-                })
-                }
-                {actions.right?.includes('pf') && playerfields && playerfields.map((field, index) => {
-                    return <option key={index} value={index}>{field}</option>
-                })
-                }
-            </select>
-        </div>
-
-
-        <div className="flex flex-col items-center justify-center" style={actions?.right_value === null ? { opacity: '20%' } : {}}>
-            <div>{{ gfcv: 'From top', pfcv: 'Index', gfcs: 'From top', pfcs: 'Index' }[actions.right as string] || 'Right value'}</div>
-            <input className="text-center border" type="text" id="actions.right_value" onChange={handleActionInput} value={actions?.right_value ?? ''} />
-        </div>
-
-    </div>
-</>
-}
 
 
             </div>

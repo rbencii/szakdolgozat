@@ -1,4 +1,3 @@
-// Creating a new supabase server client object (e.g. in API route):
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Database } from '../../../assets/supabase'

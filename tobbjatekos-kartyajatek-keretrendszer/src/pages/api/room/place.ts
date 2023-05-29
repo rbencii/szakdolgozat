@@ -1,4 +1,4 @@
-// Creating a new supabase server client object (e.g. in API route):
+
 import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import type { Database } from '../../../assets/supabase'
@@ -32,14 +32,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return;
     }
 
-
-
     if (handidx === undefined || cardidx === undefined) {
         res.status(400).json({ error: "Missing parameters" })
         return;
     }
-
-
 
     //check if player's in started game
     const { data } = await supabaseServerClient
@@ -100,8 +96,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     )
     `).eq('user_id', user.id).single();
 
-
-
     const { id: session_id, started, owner } = data?.session as any;
     const { id: session_players_id } = data as any;
     if (started === undefined || session_id === undefined) {
@@ -110,40 +104,35 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     //check if player's turn
-
     const { data: data2 } = await supabaseServerClient
         .from('tableview')
         .select(`
-    current,
-    next,
-    dir,
-    sorter,
-    top
-    `).eq('session_id', session_id).single();
+                current,
+                next,
+                dir,
+                sorter,
+                top
+                `).eq('session_id', session_id).single();
 
     let { current, next, dir, top, sorter } = data2 as any;
-
     if (current === undefined || session_players_id === undefined || current != session_players_id) {
         res.status(400).json({ error: "Not your turn" })
         return;
     }
 
     //check if card is in hand
-
     const service = createClient(url, key);
     const { data: data3 } = await service
         .from('hands')
         .select(`
-    hand
-    `).eq('session_players_id', session_players_id).single();
+                hand
+                `).eq('session_players_id', session_players_id).single();
 
     const { hand } = data3 as any;
-
     const game_id = (data as any)?.session?.games?.id as any;
     const gamefields = (data as any)?.session?.games?.gamefields as any;
     const playerfields = (data as any)?.session?.games?.playerfields as any;
     const init = (data as any)?.session?.games?.init as any;
-
 
     for (let field of playerfields) {
         hand?.[field]?.sort((a: CardData, b: CardData) => {
@@ -151,10 +140,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         });
     }
 
-
-
     const card = hand?.[handidx]?.[cardidx];
-
     if (card === undefined) {
         res.status(400).json({ error: "Card not found" })
         return;
@@ -169,23 +155,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         });
     }
 
-
-
-
     const rules = (data as any)?.session?.games?.games_rules as any ?? [];
     const chains = (data as any)?.session?.games?.chains as any ?? [];
 
     chains.sort((a: any, b: any) => {
         return a?.id - b?.id;
     });
-
-    //console.log(chains)
-
     rules.sort((a: any, b: any) => {
         return a?.rules?.id - b?.rules?.id;
     });
-
-
 
     const strength = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
     const suits = ["Hearts", "Diamonds", "Spades", "Clubs"];
@@ -197,9 +175,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     `).eq('session_id', session_id);
 
     let spids = data5?.map((sp: any) => sp.id) as any;
-
     spids.sort();
-
 
     let playable = !(chains[0]?.or_bool ?? true)
     let fail = false;
@@ -211,53 +187,39 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     let outercnt = 0;
     let breakout: boolean = false;
     let continueout: boolean = false;
-
     let localplayable = !(rules.find((rule: any) => Number(rule?.rules?.id) === chains?.[0]?.chain_start)?.rules?.or_bool ?? true);
+    
     for (let chain of chains) {
         let ids = rangeArr(chain.chain_start, chain.chain_end);
-        if(outercnt>0)
-        localplayable = playable;
+        if (outercnt > 0)
+            localplayable = playable;
+
         let chaingroup = rules.filter((rule: any) => ids?.includes(Number(rule?.rules?.id)) && rule?.rules?.required);
+
         if (chain.or_bool && playable && !broken) {
-            console.log("break")
-            //break;
             broken = true;
             globalfail = fail;
-            console.log("fail:", globalfail)
         }
         else if (chain.or_bool && !playable && !broken) {
-            console.log("reset fail");
             fail = prevfail;
         }
 
 
         prevfail = fail;
-        console.log('prevfail', prevfail);
-        if (outercnt++ != 0) {
-            console.log('((' + playable + '))');
-            console.log(chain.or_bool ? '[OR]' : '[AND]')
-        }
-        let cnt = 0;
-        let props = { prevDoAction , continueout, breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
-        if(breakout)
+        let props = { prevDoAction, continueout, breakout: (breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+
+        if (breakout)
             break;
 
-        if(continueout){
-            console.log('!!!!!!!!!!!!!!!!!!!!continued!!!!!!!!!!!!!!!!!!!')
-            continueout=false;
+        if (continueout) {
+            continueout = false;
             continue;
         }
 
         for (let rule of chaingroup) {
-            if (cnt++ != 0) {
-                console.log('(' + localplayable + ')');
-                console.log(rule?.rules?.or_bool ? 'OR' : 'AND')
-            }
             let result = await evaluateRule({ ...props, rule });
-            console.log(rule?.rules?.name, result.playable , result.fail ? 'fail' : '');
             localplayable = result.playable;
-
             dir = result.dir;
             current = result.current;
             next = result.next;
@@ -267,15 +229,15 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             sorter = result.sorter;
             breakout = result.breakout;
             continueout = result.continueout;
+            props = { prevDoAction, continueout, breakout: (breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
-            props = { prevDoAction, continueout, breakout:(breakout as boolean), sorter, prevname, fail, cardidx, playable: localplayable, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };    
-            
-            if(breakout)
+            if (breakout)
                 break;
 
-            if(continueout)
+            if (continueout)
                 break;
         }
+
         if (chain.or_bool)
             playable = playable || localplayable;
         else
@@ -286,44 +248,29 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
     fail = globalfail || (playable && fail);
     playable = broken || playable;
-    console.log('fail', fail);
-    console.log('playable', playable);
 
     if (!playable) {
         res.status(400).json({ error: "Card not playable" })
         return;
     }
 
-
-
     //remove card from hand, add to table
-
-
     if (!fail) {
         hand[handidx].splice(cardidx, 1);
         top.table.push({ ...card, sorter });
     }
 
-
     //do card actions for nonrequired rules
-    console.log('check table',table)
-    console.log('ACTIONS')
-    let acnt = 0;
     let playable2 = false;
 
     breakout = false;
     continueout = false;
-    prevDoAction=false;
+    prevDoAction = false;
 
-    for (let rule of rules.filter((rule: any) => !rule?.rules?.required && (rule?.rules?.exclusive==1 || !fail))) {
+    for (let rule of rules.filter((rule: any) => !rule?.rules?.required && (rule?.rules?.exclusive == 1 || !fail))) {
 
-        let props = { prevDoAction , continueout, breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
-        if (acnt++ > 0) {
-            console.log('(' + playable2 + ')');
-            console.log(rule.rules.or_bool ? 'OR' : 'AND');
-        }
+        let props = { prevDoAction, continueout, breakout: (breakout as boolean), sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
         let result = await evaluateRule({ ...props, rule });
-        console.log(rule?.rules?.name);
         dir = result.dir;
         current = result.current;
         next = result.next;
@@ -334,9 +281,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         playable2 = result.playable;
         breakout = result.breakout;
 
-        props = { prevDoAction , continueout, breakout: (breakout as boolean) ,sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+        props = { prevDoAction, continueout, breakout: (breakout as boolean), sorter, prevname, fail, cardidx, playable: playable2, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
-        if(breakout)
+        if (breakout)
             break;
 
     }
@@ -347,8 +294,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     const { data: newdata } = await service
         .from('hands')
         .update({ hand: hand })
-        .eq('session_players_id', session_players_id)//.select().single();
-    //const { hand: newhand} = newdata as any;
+        .eq('session_players_id', session_players_id);
 
     await service.
         from('tableview')
@@ -358,8 +304,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     //update view
 
     // build handview, third person view of hand
-    let topview = { ...hand };//{ ...newhand };
-    let outerview = { ...hand };//{ ...newhand };
+    let topview = { ...hand };
+    let outerview = { ...hand };
     for (let field of playerfields) {
         const hidden: CardData = { suit: 'hidden', value: 'hidden' } as any;
         topview[field] = topview[field].map((card: CardData) => field[0] === '-' ? hidden : card);
@@ -375,46 +321,42 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         .eq('id', session_players_id);
 
 
+    //win
+    if (win && winner != null) {
 
 
-        console.log('---------------------------------------------------------------------------------------------------------------------')
-    
-        //win
-        if(win && winner!=null){
+        const { data: data5, error: error5 } = await service
+            .from('session_players')
+            .select(`
+                    id,
+                    user_id,
+                    name
+                    `).eq('session_id', session_id);
 
 
-            const { data: data5, error: error5 } = await service
-        .from('session_players')
-        .select(`
-    id,
-    user_id,
-    name
-    `).eq('session_id', session_id);
-
-
-        if(data5==null || error5){
+        if (data5 == null || error5) {
             res.status(500).json({ error: "Failed Dependency" })
             return;
         }
 
-        const winner_obj = data5.find((sp:any) => sp.id==winner);
+        const winner_obj = data5.find((sp: any) => sp.id == winner);
 
         const { data: data6, error: error6 } = await service
-        .from('leaderboard')
-        .select(`
-        id,
-        wins
-        `).eq('user_id', winner_obj?.user_id).eq('game_id', game_id).single();
+            .from('leaderboard')
+            .select(`
+                    id,
+                    wins
+                    `).eq('user_id', winner_obj?.user_id).eq('game_id', game_id).single();
 
         const wins = data6?.wins ?? 0;
-        const leaderboard_id = data6?.id??null;
+        const leaderboard_id = data6?.id ?? null;
 
-        if(leaderboard_id==null){
-        const { data: data4, error: error4 } = await service
-        .from('leaderboard')
-        .insert([
-            {user_id:winner_obj?.user_id, name:winner_obj?.name, game_id: game_id, wins: wins+1 }
-        ]).select().single();
+        if (leaderboard_id == null) {
+            const { data: data4, error: error4 } = await service
+                .from('leaderboard')
+                .insert([
+                    { user_id: winner_obj?.user_id, name: winner_obj?.name, game_id: game_id, wins: wins + 1 }
+                ]).select().single();
 
 
             if (error4 || data4 == null) {
@@ -437,18 +379,18 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         await service
-        .from('session')
-        .delete()
-        .eq('id', session_id);
+            .from('session')
+            .delete()
+            .eq('id', session_id);
 
         const { data: data7, error: error7 } = await service
-        .from('session')
-        .insert
-        ([
-            {owner: owner, game: game_id}
-        ]).select().single();
+            .from('session')
+            .insert
+            ([
+                { owner: owner, game: game_id }
+            ]).select().single();
 
-        if(error7 || data7==null){
+        if (error7 || data7 == null) {
             res.status(424).json({ error: "Failed Dependency" })
             return;
         }
@@ -456,13 +398,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         const { id: new_session_id } = data7 as any;
 
         const { data: data8, error: error8 } = await service
-        .from('session_players')
-        .insert(
-            data5.map((sp:any) => ({user_id: sp.user_id, session_id: new_session_id, name: sp.name}))
+            .from('session_players')
+            .insert(
+                data5.map((sp: any) => ({ user_id: sp.user_id, session_id: new_session_id, name: sp.name }))
             )
-        .select();
+            .select();
 
-        if(error8 || data8==null){
+        if (error8 || data8 == null) {
             res.status(424).json({ error: "Failed Dependency" })
             return;
         }
@@ -471,11 +413,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return;
 
 
-        }
+    }
 
-        
-    
-        res.status(200).json({ message: "Card played" })
+
+
+    res.status(200).json({ message: "Card played" })
 
 }
 
@@ -511,7 +453,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
 
 
         tableAbove = table3;
-        //rtable = (right_player == 0 ) ? table : table3;
     }
     else
         tableAbove = table;
@@ -529,7 +470,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
         }
 
 
-        //tableAbove = table3;
         rtable = table3;
     }
     else
@@ -615,7 +555,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
             break;
         case 'gfc': //gamefield card count
             left = tableAbove?.[gamefields?.[left_field]]?.length;
-            //console.log('gfc', tableAbove)
             break;
         case 'pf': //playerfield
             left = hand?.[playerfields?.[left_field]];
@@ -628,7 +567,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
             break;
         case 'next':
             left = spids[next];
-        break;
+            break;
 
     }
 
@@ -685,7 +624,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
             right = rtable?.[gamefields?.[right_field]];
             break;
         case 'value': //value
-            right = leftSwitch=='next'?spids[(spids.indexOf(session_players_id) + right_value * dir) % spids.length]:right_value;
+            right = leftSwitch == 'next' ? spids[(spids.indexOf(session_players_id) + right_value * dir) % spids.length] : right_value;
             break;
 
     }
@@ -708,10 +647,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                         playable = playable && (left <= right);
                     break;
                 case '==':
-                    if(leftSwitch=='gfc' && rightSwitch=='value' && right==0){
-                        console.log('!!!left',left,'==','!!!right',right)
-                    }
-
                     if (or_bool)
                         playable = playable || (left === right);
                     else
@@ -750,7 +685,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     break;
 
                 case 'r_count_in_l_ge':
-                    //console.log('number of ',right,' in ', left , '>= 1 playable')
                     if (['value', 'gfcv', 'pfcv', 'cv'].includes(rightSwitch)) {
                         if (or_bool)
                             playable = playable || (left?.map((x: any) => strength.indexOf(x?.value))?.filter((x: any) => x == right)?.length >= left_value);
@@ -810,7 +744,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     doAction = (left <= right);
                     break;
                 case '==':
-                    console.log('left', left, '==', 'right', right)
                     doAction = (left === right);
                     break;
                 case '!=':
@@ -830,8 +763,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     }
                     break;
                 case 'r_count_in_l_ge':
-                    //console.log('number of ',right,' in ', left , 'action')
-
                     if (['value', 'gfcv', 'pfcv', 'cv'].includes(rightSwitch)) {
                         doAction = (left?.map((x: any) => strength.indexOf(x?.value))?.filter((x: any) => x == right)?.length >= left_value);
                     } else if (['cs', 'gfcs', 'pfcs'].includes(rightSwitch)) {
@@ -880,26 +811,17 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     break;
             }
 
-            if(rule?.rules?.required && prevname == rule?.rules?.name && actions!==null){
-                playable = prevplayable;
-                doAction = prevDoAction;
-            }
+        if (rule?.rules?.required && prevname == rule?.rules?.name && actions !== null) {
+            playable = prevplayable;
+            doAction = prevDoAction;
+        }
 
-        // if (rule?.rules?.name?.includes('top'))
-        // console.log(rule?.rules?.name,': ',left, operator, right)
-        // console.log('doaction', doAction);
-        console.log('                                                                                 left',left)
-        console.log('                                                                                 ',operator)
-        console.log('                                                                                 right',right)
         if (doAction) {
-            console.log('DOING ------>', actions?.action);
             const { left: leftSw, right: rightSw, action, left_field, right_field, number, action_type, operator, left_player, right_player, left_value, right_value } = actions;
-            console.log('leftsw', leftSw, 'rightsw', rightSw, 'rule id', rule?.rules?.id, 'action id', actions?.id)
             let left, right;
 
 
             let tableAbove, rtable;
-            //get table
             if ((left_player != null && left_player != 0 && leftSw?.includes('gf'))) {
                 const { data: tabledata } = await service
                     .from('tables')
@@ -914,7 +836,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
 
 
                 tableAbove = table3;
-                //rtable = (right_player == 0 ) ? table : table3;
             }
             else
                 tableAbove = table;
@@ -932,13 +853,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                 }
 
 
-                //tableAbove = table3;
                 rtable = table3;
-
-                //console.log('RTABLE', rtable);
-                //console.log('rightSw', rightSw);
-                //console.log('rule',rule?.rules?.name)
-                //console.log('dir',dir,'next', next)
             }
             else
                 rtable = table;
@@ -1036,7 +951,7 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     break;
                 case 'next':
                     left = spids[next];
-                break;
+                    break;
             }
 
             switch (rightSw) {
@@ -1092,13 +1007,12 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     right = rtable?.[gamefields?.[right_field]];
                     break;
                 case 'value': //value
-                    right = leftSw=='next'?spids[(spids.indexOf(session_players_id) + right_value * dir) % spids.length]:right_value;
+                    right = leftSw == 'next' ? spids[(spids.indexOf(session_players_id) + right_value * dir) % spids.length] : right_value;
                     break;
 
             }
-            console.log('action left:', left);
-            console.log('action right:', right);
             let update = false;
+
             switch (action) {
                 case 'fill_l_from_r':
                     const initnumber = leftSw.slice(-2) == 'gf' ? init['gamefields'][gamefields?.[right_field]] : init['playerfields'][playerfields?.[right_field]];
@@ -1110,14 +1024,12 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     update = true;
                     break;
                 case 'move_lv_l_to_r':
-                    console.log('LEFTSW',leftSw)
                     if (leftSw == 'cv') {
                         const start = Math.max(right.length - 1, 0);
                         right.push(hand[handidx]?.splice(cardidx, 1)[0])
                         for (let i = start; i < right.length; i++) {
                             right[i].sorter = sorter++;
                         }
-                        console.log('right MOVE', right);
                         if (right)
                             update = true;
                         break;
@@ -1125,14 +1037,9 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
 
                     const lv = left_value === -1 ? left.length : left_value;
                     const start2 = Math.max(right.length - 1, 0);
-                    //console.log(start2);
-                    //console.log('left',left);
-                    //console.log('right',right);
-                    right.push(...left.splice(-1 * lv, lv))
-                    //console.log('left',left);
-                    //console.log('right',right);
 
-                    //console.log(right.length-1);
+                    right.push(...left.splice(-1 * lv, lv))
+
                     for (let i = start2; i < right.length; i++) {
                         right[i].sorter = sorter++;
                     }
@@ -1144,31 +1051,28 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     break;
                 case 'next':
                     next = spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
-
-                    //if(next == session_players_id)
-                    //console.log('ITT LESZ NEXT 0',rule?.rules?.name)
                     break;
                 case 'setcard':
                     const sorter2 = left?.[left_value]?.sorter;
-                    if(rightSw=='cv')
-                    left[left_value] = { suit: card?.suit, value: card?.value, sorter: sorter2 ?? sorter++ };
-                    else if(rightSw=='value'){
-                    left[left_value]={suit: ['Diamonds', 'Hearts', 'Spades', 'Clubs'][right_player % 4], value: strength[right_value % strength.length], sorter: left?.[left_value]??sorter++}
+                    if (rightSw == 'cv')
+                        left[left_value] = { suit: card?.suit, value: card?.value, sorter: sorter2 ?? sorter++ };
+                    else if (rightSw == 'value') {
+                        left[left_value] = { suit: ['Diamonds', 'Hearts', 'Spades', 'Clubs'][right_player % 4], value: strength[right_value % strength.length], sorter: left?.[left_value] ?? sorter++ }
                     }
                     else
-                    left[left_value] = { suit: right.slice(right_value)[0]?.suit, value: right.slice(right_value)[0]?.value, sorter: sorter2 ?? sorter++ };
+                        left[left_value] = { suit: right.slice(right_value)[0]?.suit, value: right.slice(right_value)[0]?.value, sorter: sorter2 ?? sorter++ };
                     update = true;
                     break;
                 case 'setvalue':
-                    if(left[left_value]?.value){
-                    left[left_value]['value'] = right;
-                    update = true;
+                    if (left[left_value]?.value) {
+                        left[left_value]['value'] = right;
+                        update = true;
                     }
                     break;
                 case 'setsuit':
-                    if(left[left_value]?.suit){
-                    left[left_value]['suit'] = ['Diamonds', 'Hearts', 'Spades', 'Clubs'][right % 4];
-                    update = true;
+                    if (left[left_value]?.suit) {
+                        left[left_value]['suit'] = ['Diamonds', 'Hearts', 'Spades', 'Clubs'][right % 4];
+                        update = true;
                     }
                     break;
                 case 'dir':
@@ -1181,8 +1085,8 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     continueout = true;
                     break;
                 case 'win':
-                    win=true;
-                    winner=spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
+                    win = true;
+                    winner = spids[(spids.indexOf(current) + (right_value ?? 0) * dir) % spids.length];
                     break;
                 default:
                     break;
@@ -1200,12 +1104,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     top.tablecount = tbl2?.table?.length;
                 }
 
-                // if(left_player===0 || right_player===0)
-                // await service
-                //     .from('hands')
-                //     .update({ hand: hand })
-                //     .eq('session_players_id', session_players_id);
-
 
                 //left or right is distant playerfield something
                 if ((leftSw?.includes('pf') && left_player !== 0 && left_player != null) || (rightSw?.includes('pf') && right_player !== 0 && right_player != null)) {
@@ -1215,9 +1113,8 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
                     const { data: newdata } = await service
                         .from('hands')
                         .update({ hand: hnd })
-                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + ((leftSw?.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);//.select().single();
+                        .eq('session_players_id', spids[(spids.indexOf(session_players_id) + ((leftSw?.includes('pf') && left_player !== 0) ? left_player : right_player) * dir) % spids.length]);
 
-                    //const { hand: newhand } = newdata as any;
 
                     let topview = { ...hnd };
                     let outerview = { ...hnd };
@@ -1249,6 +1146,6 @@ async function evaluateRule({ prevDoAction, continueout, breakout, sorter, prevn
     }
     prevname = rule?.rules?.name;
     prevDoAction = doAction;
-    return {prevDoAction, continueout, breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
+    return { prevDoAction, continueout, breakout, sorter, prevname, fail, cardidx, playable, rule, strength, card, init, playerfields, hand, service, spids, session_players_id, dir, table, gamefields, handidx, session_id, current, next, top };
 
 }

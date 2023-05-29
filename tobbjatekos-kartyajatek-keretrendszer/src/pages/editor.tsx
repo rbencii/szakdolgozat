@@ -50,8 +50,6 @@ export default function Editor() {
         listGames();
         if(games.game!==null && games.loadedgame==null)
         loadRules();
-
-        console.log(games)
     },[games])
 
     const setGame = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -164,18 +162,6 @@ export default function Editor() {
                             })
                         }
                      </div>
-                {/* <div className="text-center [&_span:first-of-type>span]:hidden">
-                    <h1 className="text-xl">required</h1>
-            {games.game &&
-                games.loadedgame?.games_rules?.filter((rule: {rules: Ruletype})=>rule.rules.required).map((rule: {rules: Ruletype}, i: number)=>{
-                    if(rule.rules.or_bool)
-                    return <Fragment key={i}><div>OR</div><span>{rule.rules.name}</span></Fragment>
-
-                    return <span key={i}> <span>AND</span> {rule.rules.name}</span>
-                })
-            }
-            </div> */}
-
             <h1 className="text-xl">-- card is placed --</h1>
 
             <div className="text-center [&_span:first-of-type>span]:hidden">

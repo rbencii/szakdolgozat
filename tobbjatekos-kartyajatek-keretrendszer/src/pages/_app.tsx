@@ -10,7 +10,6 @@ export default function MyApp({
 }: AppProps<{
   initialSession: Session
 }>) {
-  // Create a new supabase browser client on every first render.
   const [supabaseClient] = useState(() => createBrowserSupabaseClient({supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL, supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, options: {realtime: { params: { eventsPerSecond: 15}}}}))
 
   return (

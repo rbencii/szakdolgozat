@@ -25,15 +25,6 @@ const Home = () => {
             </div>
           ) : (
             <div className='w-full h-full flex flex-col items-center justify-center gap-6'>
-              {/* <div>Logged in</div>
-              <a href="/play">Play</a>
-              <a href="/editor">Editor</a>
-              <button onClick={async () => {
-                let { error } = await supabase.auth.signOut()
-              }}>
-                logout
-              </button> */}
-
               <a href="/play" className="max-w-[20rem] w-full max-h-16 h-full">
                 <MenuButton text='Play' />
               </a>
