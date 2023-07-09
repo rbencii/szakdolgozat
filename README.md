@@ -46,7 +46,7 @@ A saját adatbázis URI a [https://supabase.com/dashboard/project/_/settings/dat
 
 <img width="427" alt="uri" src="https://github.com/rbencii/szakdolgozat/assets/83843622/06a8a3e6-2627-4106-a755-a8baa9abfcc0">
 
-A táblák létrehozása után a valós idejű funkciók [támogatását](https://app.supabase.com/project/_/database/replication) engedélyeznünk kell.
+A táblák létrehozása után a [valós idejű funkciók támogatását](https://app.supabase.com/project/_/database/replication) engedélyeznünk kell.
 Ehhez teendő lépések:
 
 1. supabase_realtime jobb oldalán lévő "source" megnyitása
@@ -71,7 +71,7 @@ A szerverprogram függőségeinek telepítése a Node Package Manager használat
 
 ## Az API-hoz szükséges adatok megadása
 
-Ahhoz, hogy a szerverprogram csatlakozni tudjon a Supabase projekthez, definiálni kell a megfelelő környezeti változókat. Az ehhez szükséges adatok a projekt [beállítások](https://app.supabase.com/project/_/settings/api) API részén elérhetőek.
+Ahhoz, hogy a szerverprogram csatlakozni tudjon a Supabase projekthez, definiálni kell a megfelelő környezeti változókat. Az ehhez szükséges adatok a [projekt beállítások](https://app.supabase.com/project/_/settings/api) API részén elérhetőek.
 
 A környezeti változók fájljának elérési útja a "tobbjatekos-kartyajatek-keretrendszer/.env.local". Itt a következőképpen kerülnek definiálásra a változók:
 
