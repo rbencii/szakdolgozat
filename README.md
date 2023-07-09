@@ -16,7 +16,7 @@ pakli, asztalra helyezett lapok, többi játékos kártyáinak száma, illetve a
 különböző reakciógombokkal is jelezhetnek egymásnak a résztvevők.
 A játék vége után lehetőségük van újrakezdeni, és visszajelzést kapnak arról, hogy ki hányszor nyert.
 
-## Játékmenet bemutatása
+# Játékmenet bemutatása
 Ha éppen fut az általam készített supabase projekt, akkor a játék elérhető a [https://szakdolgozat-three.vercel.app/](https://szakdolgozat-three.vercel.app/) linken.
 
 https://github.com/rbencii/szakdolgozat/assets/83843622/2132714f-7df9-490e-933e-5be1ed914466
