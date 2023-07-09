@@ -17,7 +17,10 @@ különböző reakciógombokkal is jelezhetnek egymásnak a résztvevők.
 A játék vége után lehetőségük van újrakezdeni, és visszajelzést kapnak arról, hogy ki hányszor nyert.
 
 ## Játékmenet bemutatása
-https://github.com/rbencii/szakdolgozat/assets/83843622/939d900f-98f8-4ba5-9df5-e6d537207b56
+Ha éppen fut az általam készített supabase projekt, akkor a játék elérhető a [https://szakdolgozat-three.vercel.app/](https://szakdolgozat-three.vercel.app/) linken.
+
+https://github.com/rbencii/szakdolgozat/assets/83843622/2132714f-7df9-490e-933e-5be1ed914466
+
 
 
 # Telepítés és futtatás
@@ -41,8 +44,7 @@ parancs futtatása ad lehetőséget. Ennek folyamata a tobbjatekos-kartyajatek-k
 
 A saját adatbázis URI a [https://supabase.com/dashboard/project/_/settings/database](https://supabase.com/dashboard/project/_/settings/database) hivatkozáson megjelenő "Connection String" ablak "URI" gombjának megnyomásával érhető el. Ennek a "[YOUR-PASSWORD]" részét ki kell cserélni az adatbázis jelszavára.
 
-<img width="427" alt="uri" src="https://github.com/rbencii/szakdolgozat/assets/83843622/f7de4738-7e2f-410a-9688-5c0114d12c64">
-
+<img width="427" alt="uri" src="https://github.com/rbencii/szakdolgozat/assets/83843622/06a8a3e6-2627-4106-a755-a8baa9abfcc0">
 
 A táblák létrehozása után a valós idejű funkciók [támogatását](https://app.supabase.com/project/_/database/replication) engedélyeznünk kell.
 Ehhez teendő lépések:
@@ -54,8 +56,10 @@ Ehhez teendő lépések:
 - session
 - session_players
 - tableview
-<img width="1448" alt="replication" src="https://github.com/rbencii/szakdolgozat/assets/83843622/3140c080-65b0-448f-8536-2c7be23e9035">
-<img width="1131" alt="replication2" src="https://github.com/rbencii/szakdolgozat/assets/83843622/1018cbb7-426d-4c28-ac1e-0b7fba07d9c3">
+
+<img width="1448" alt="replication" src="https://github.com/rbencii/szakdolgozat/assets/83843622/b13cd121-12f5-4f92-82f0-15d6da323c0f">
+<img width="1131" alt="replication2" src="https://github.com/rbencii/szakdolgozat/assets/83843622/72df75fb-e30b-48ae-aabf-ed4517638d9f">
+
 
 ## Futtatási környezet telepítése
 A Node.js előző verziói a [https://nodejs.org/en/download/releases](https://nodejs.org/en/download/releases) hivatkozáson érhetőek el. Az operációs rendszernek megfelelő telepítő kiterjesztéssel rendelkező fájl segítségével telepíthető.
