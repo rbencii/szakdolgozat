@@ -16,7 +16,9 @@ pakli, asztalra helyezett lapok, többi játékos kártyáinak száma, illetve a
 különböző reakciógombokkal is jelezhetnek egymásnak a résztvevők.
 A játék vége után lehetőségük van újrakezdeni, és visszajelzést kapnak arról, hogy ki hányszor nyert.
 
-<img width="720" alt="Screenshot 2023-07-10 at 0 46 36" src="https://github.com/rbencii/szakdolgozat/assets/83843622/704e51cb-94b5-45aa-8e36-2a107c6a96ae">
+## Játékmenet bemutatása
+https://github.com/rbencii/szakdolgozat/assets/83843622/939d900f-98f8-4ba5-9df5-e6d537207b56
+
 
 # Telepítés és futtatás
 A többjátékos kártyajáték keretrendszer teljes telepítése 5 fő lépésből áll:
